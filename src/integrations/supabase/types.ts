@@ -192,6 +192,101 @@ export type Database = {
           },
         ]
       }
+      calculator_data: {
+        Row: {
+          addons: Json | null
+          complexidade: string | null
+          created_at: string
+          custo_consulta_primeira_vez: number | null
+          custo_consulta_retorno: number | null
+          custo_consulta_simples: number | null
+          custo_instalacao: number | null
+          custo_mensalidade: number | null
+          duracao_meses: number | null
+          fonte_consulta_primeira_vez: number | null
+          fonte_consulta_retorno: number | null
+          fonte_consulta_simples: number | null
+          fonte_instalacao: number | null
+          fonte_mensalidade: number | null
+          id: string
+          num_consultas_mes: number | null
+          num_profissionais: number | null
+          percentual_primeira_vez: number | null
+          percentual_retorno: number | null
+          preco_consulta_primeira_vez: number | null
+          preco_consulta_retorno: number | null
+          preco_consulta_simples: number | null
+          preco_instalacao: number | null
+          preco_mensalidade: number | null
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          addons?: Json | null
+          complexidade?: string | null
+          created_at?: string
+          custo_consulta_primeira_vez?: number | null
+          custo_consulta_retorno?: number | null
+          custo_consulta_simples?: number | null
+          custo_instalacao?: number | null
+          custo_mensalidade?: number | null
+          duracao_meses?: number | null
+          fonte_consulta_primeira_vez?: number | null
+          fonte_consulta_retorno?: number | null
+          fonte_consulta_simples?: number | null
+          fonte_instalacao?: number | null
+          fonte_mensalidade?: number | null
+          id?: string
+          num_consultas_mes?: number | null
+          num_profissionais?: number | null
+          percentual_primeira_vez?: number | null
+          percentual_retorno?: number | null
+          preco_consulta_primeira_vez?: number | null
+          preco_consulta_retorno?: number | null
+          preco_consulta_simples?: number | null
+          preco_instalacao?: number | null
+          preco_mensalidade?: number | null
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          addons?: Json | null
+          complexidade?: string | null
+          created_at?: string
+          custo_consulta_primeira_vez?: number | null
+          custo_consulta_retorno?: number | null
+          custo_consulta_simples?: number | null
+          custo_instalacao?: number | null
+          custo_mensalidade?: number | null
+          duracao_meses?: number | null
+          fonte_consulta_primeira_vez?: number | null
+          fonte_consulta_retorno?: number | null
+          fonte_consulta_simples?: number | null
+          fonte_instalacao?: number | null
+          fonte_mensalidade?: number | null
+          id?: string
+          num_consultas_mes?: number | null
+          num_profissionais?: number | null
+          percentual_primeira_vez?: number | null
+          percentual_retorno?: number | null
+          preco_consulta_primeira_vez?: number | null
+          preco_consulta_retorno?: number | null
+          preco_consulta_simples?: number | null
+          preco_instalacao?: number | null
+          preco_mensalidade?: number | null
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calculator_data_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Canal: {
         Row: {
           canal: string | null
@@ -892,6 +987,42 @@ export type Database = {
           tamanho?: string | null
           ultima_atualização?: string | null
           Url?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          client_name: string | null
+          created_at: string
+          description: string | null
+          id: string
+          last_accessed_at: string
+          name: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_name?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          last_accessed_at?: string
+          name: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_name?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          last_accessed_at?: string
+          name?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

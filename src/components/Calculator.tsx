@@ -97,7 +97,11 @@ const RECORRENCIA_ITEMS: { key: RecorrenciaKey; name: string; defaultNote: strin
   { key: 'suporte', name: 'Suporte e Melhorias', defaultNote: 'Análise + otimizações' }
 ];
 
-export const Calculator = () => {
+interface CalculatorProps {
+  projectId: string;
+}
+
+export const Calculator = ({ projectId }: CalculatorProps) => {
   const [activeTab, setActiveTab] = useState('comercial');
   const [data, setData] = useState<CalculatorData>({
     implantacao: {

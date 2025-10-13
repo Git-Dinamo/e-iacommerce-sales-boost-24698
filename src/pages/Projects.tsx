@@ -18,7 +18,7 @@ interface Project {
   name: string;
   description: string | null;
   client_name: string | null;
-  status: 'draft' | 'active' | 'archived';
+  status: string;
   created_at: string;
   updated_at: string;
   last_accessed_at: string;
@@ -92,10 +92,23 @@ const Projects = () => {
     }
 
     try {
+      // Obter usuário atual
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: 'Erro de autenticação',
+          description: 'Você precisa estar logado para criar um projeto',
+          variant: 'destructive'
+        });
+        return;
+      }
+
       // Criar projeto
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .insert({
+          user_id: user.id,
           name: newProject.name,
           description: newProject.description || null,
           client_name: newProject.client_name || null,
