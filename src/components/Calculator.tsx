@@ -50,20 +50,18 @@ interface Adicional {
 }
 
 interface CustosFonte {
-  recursosHumanos: {
-    devPleno: number;
-    devJunior: number;
-    analistaBi: number;
-    consultorEspecialista: number;
+  implantacao: {
+    setupInicial: number;
+    configuracaoServidor: number;
+    migracaoDados: number;
+    treinamentoEquipe: number;
   };
-  infraestrutura: {
-    servidorVps: number;
-    bancoDados: number;
-    apisIntegracoes: number;
-    openaiServices: number;
-    monitoramento: number;
-    cdnStorage: number;
-  };
+  mensaisFixos: Array<{
+    id: number;
+    nome: string;
+    valor: number;
+    descricao: string;
+  }>;
 }
 
 const CUSTOS_INTERNOS = {
@@ -155,20 +153,20 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
   );
 
   const [custosFonte, setCustosFonte] = useState<CustosFonte>({
-    recursosHumanos: {
-      devPleno: 2200,
-      devJunior: 1500,
-      analistaBi: 1800,
-      consultorEspecialista: 1500
+    implantacao: {
+      setupInicial: 800,
+      configuracaoServidor: 500,
+      migracaoDados: 1200,
+      treinamentoEquipe: 600
     },
-    infraestrutura: {
-      servidorVps: 100,
-      bancoDados: 80,
-      apisIntegracoes: 70,
-      openaiServices: 150,
-      monitoramento: 60,
-      cdnStorage: 30
-    }
+    mensaisFixos: [
+      { id: 1, nome: 'Servidor VPS', valor: 100, descricao: '2-8GB RAM' },
+      { id: 2, nome: 'Banco de Dados', valor: 80, descricao: 'PostgreSQL/MySQL' },
+      { id: 3, nome: 'APIs Externas', valor: 70, descricao: 'Integrações' },
+      { id: 4, nome: 'Serviços IA (OpenAI)', valor: 150, descricao: 'Conforme uso' },
+      { id: 5, nome: 'Monitoramento', valor: 60, descricao: 'Logs e métricas' },
+      { id: 6, nome: 'CDN e Storage', valor: 30, descricao: 'Arquivos e cache' }
+    ]
   });
 
   const canEditObservacoes = true; // Permissões globais - todos podem editar
@@ -283,19 +281,22 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
   };
 
   // Custos calculados dinamicamente baseados na fonte
+  const totalCustosImplantacaoFonte = Object.values(custosFonte.implantacao).reduce((sum, val) => sum + val, 0);
+  const totalCustosMensaisFonte = custosFonte.mensaisFixos.reduce((sum, item) => sum + item.valor, 0);
+
   const custosCalculados = {
     implantacao: {
-      agente: custosFonte.recursosHumanos.devPleno * 0.3, // 30% do custo mensal
-      lembretes: custosFonte.recursosHumanos.devJunior * 0.8 + custosFonte.recursosHumanos.analistaBi * 0.4,
-      paineis: custosFonte.recursosHumanos.analistaBi * 1.2 + custosFonte.recursosHumanos.devPleno * 0.2,
-      integracao: custosFonte.recursosHumanos.consultorEspecialista * 0.5 + custosFonte.recursosHumanos.devJunior * 0.25,
-      setup: custosFonte.recursosHumanos.devJunior * 0.3,
-      treinamento: custosFonte.recursosHumanos.consultorEspecialista * 0.33
+      agente: totalCustosImplantacaoFonte * 0.15,
+      lembretes: totalCustosImplantacaoFonte * 0.25,
+      paineis: totalCustosImplantacaoFonte * 0.30,
+      integracao: totalCustosImplantacaoFonte * 0.15,
+      setup: totalCustosImplantacaoFonte * 0.08,
+      treinamento: totalCustosImplantacaoFonte * 0.07
     },
     recorrencia: {
-      manutencao: custosFonte.recursosHumanos.devPleno * 0.34, // ~6h/mês
-      infra: custosFonte.infraestrutura.servidorVps + custosFonte.infraestrutura.bancoDados + custosFonte.infraestrutura.openaiServices + custosFonte.infraestrutura.monitoramento,
-      suporte: custosFonte.recursosHumanos.analistaBi * 0.11 + custosFonte.infraestrutura.cdnStorage + custosFonte.infraestrutura.apisIntegracoes
+      manutencao: totalCustosMensaisFonte * 0.40,
+      infra: totalCustosMensaisFonte * 0.45,
+      suporte: totalCustosMensaisFonte * 0.15
     }
   };
 
@@ -743,151 +744,175 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                 </p>
               </div>
               
-              {/* Recursos Humanos */}
+              {/* Custos de Implantação (One-time) */}
               <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                <h3 className="text-xl font-bold p-4 bg-gray-100 border-b">👥 Recursos Humanos</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-calc-table-header text-white">
-                        <th className="p-4 text-left font-semibold">Função</th>
-                        <th className="p-4 text-left font-semibold">Custo Mensal</th>
-                        <th className="p-4 text-left font-semibold">Valor/Hora</th>
-                        <th className="p-4 text-left font-semibold">Perfil</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">Desenvolvedor Pleno</td>
-                        <td className="p-4">
-                          <InputCell
-                            value={custosFonte.recursosHumanos.devPleno}
-                            onChange={(value) => updateCustosFonte('recursosHumanos', 'devPleno', value)}
-                          />
-                        </td>
-                        <td className="p-4">{formatCurrency(custosFonte.recursosHumanos.devPleno / 160)}</td>
-                        <td className="p-4 text-gray-600">Backend, APIs, IA</td>
-                      </tr>
-                      <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">Desenvolvedor Júnior</td>
-                        <td className="p-4">
-                          <InputCell
-                            value={custosFonte.recursosHumanos.devJunior}
-                            onChange={(value) => updateCustosFonte('recursosHumanos', 'devJunior', value)}
-                          />
-                        </td>
-                        <td className="p-4">{formatCurrency(custosFonte.recursosHumanos.devJunior / 160)}</td>
-                        <td className="p-4 text-gray-600">Frontend, suporte</td>
-                      </tr>
-                      <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">Analista de BI</td>
-                        <td className="p-4">
-                          <InputCell
-                            value={custosFonte.recursosHumanos.analistaBi}
-                            onChange={(value) => updateCustosFonte('recursosHumanos', 'analistaBi', value)}
-                          />
-                        </td>
-                        <td className="p-4">{formatCurrency(custosFonte.recursosHumanos.analistaBi / 160)}</td>
-                        <td className="p-4 text-gray-600">Dados, dashboards</td>
-                      </tr>
-                      <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">Consultor Especialista</td>
-                        <td className="p-4">
-                          <InputCell
-                            value={custosFonte.recursosHumanos.consultorEspecialista}
-                            onChange={(value) => updateCustosFonte('recursosHumanos', 'consultorEspecialista', value)}
-                          />
-                        </td>
-                        <td className="p-4">{formatCurrency(custosFonte.recursosHumanos.consultorEspecialista / 160)}</td>
-                        <td className="p-4 text-gray-600">Integrações específicas</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Infraestrutura */}
-              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                <h3 className="text-xl font-bold p-4 bg-gray-100 border-b">🖥️ Infraestrutura Operacional</h3>
+                <h3 className="text-xl font-bold p-4 bg-blue-100 border-b">🚀 Custos de Implantação (One-time)</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-calc-table-header text-white">
                         <th className="p-4 text-left font-semibold">Item</th>
                         <th className="p-4 text-left font-semibold">Custo Base</th>
-                        <th className="p-4 text-left font-semibold">Variação</th>
-                        <th className="p-4 text-left font-semibold">Observações</th>
+                        <th className="p-4 text-left font-semibold">Descrição</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">Servidor VPS Básico</td>
+                        <td className="p-4 font-medium">Setup Inicial</td>
                         <td className="p-4">
                           <InputCell
-                            value={custosFonte.infraestrutura.servidorVps}
-                            onChange={(value) => updateCustosFonte('infraestrutura', 'servidorVps', value)}
+                            value={custosFonte.implantacao.setupInicial}
+                            onChange={(value) => updateCustosFonte('implantacao', 'setupInicial', value)}
                           />
                         </td>
-                        <td className="p-4 text-gray-600">R$ 50–300</td>
-                        <td className="p-4 text-gray-600">2–8GB RAM</td>
+                        <td className="p-4 text-gray-600">Configuração inicial do ambiente</td>
                       </tr>
                       <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">Banco de Dados</td>
+                        <td className="p-4 font-medium">Configuração Servidor</td>
                         <td className="p-4">
                           <InputCell
-                            value={custosFonte.infraestrutura.bancoDados}
-                            onChange={(value) => updateCustosFonte('infraestrutura', 'bancoDados', value)}
+                            value={custosFonte.implantacao.configuracaoServidor}
+                            onChange={(value) => updateCustosFonte('implantacao', 'configuracaoServidor', value)}
                           />
                         </td>
-                        <td className="p-4 text-gray-600">R$ 50–200</td>
-                        <td className="p-4 text-gray-600">PostgreSQL/MySQL</td>
+                        <td className="p-4 text-gray-600">Deploy e configuração de infraestrutura</td>
                       </tr>
                       <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">APIs e Integrações</td>
+                        <td className="p-4 font-medium">Migração de Dados</td>
                         <td className="p-4">
                           <InputCell
-                            value={custosFonte.infraestrutura.apisIntegracoes}
-                            onChange={(value) => updateCustosFonte('infraestrutura', 'apisIntegracoes', value)}
+                            value={custosFonte.implantacao.migracaoDados}
+                            onChange={(value) => updateCustosFonte('implantacao', 'migracaoDados', value)}
                           />
                         </td>
-                        <td className="p-4 text-gray-600">R$ 50–150</td>
-                        <td className="p-4 text-gray-600">Por projeto</td>
+                        <td className="p-4 text-gray-600">Importação e estruturação de dados</td>
                       </tr>
                       <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">OpenAI/IA Services</td>
+                        <td className="p-4 font-medium">Treinamento Equipe</td>
                         <td className="p-4">
                           <InputCell
-                            value={custosFonte.infraestrutura.openaiServices}
-                            onChange={(value) => updateCustosFonte('infraestrutura', 'openaiServices', value)}
+                            value={custosFonte.implantacao.treinamentoEquipe}
+                            onChange={(value) => updateCustosFonte('implantacao', 'treinamentoEquipe', value)}
                           />
                         </td>
-                        <td className="p-4 text-gray-600">R$ 100–500</td>
-                        <td className="p-4 text-gray-600">Conforme uso</td>
-                      </tr>
-                      <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">Monitoramento</td>
-                        <td className="p-4">
-                          <InputCell
-                            value={custosFonte.infraestrutura.monitoramento}
-                            onChange={(value) => updateCustosFonte('infraestrutura', 'monitoramento', value)}
-                          />
-                        </td>
-                        <td className="p-4 text-gray-600">R$ 40–120</td>
-                        <td className="p-4 text-gray-600">Logs, métricas</td>
-                      </tr>
-                      <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">CDN e Storage</td>
-                        <td className="p-4">
-                          <InputCell
-                            value={custosFonte.infraestrutura.cdnStorage}
-                            onChange={(value) => updateCustosFonte('infraestrutura', 'cdnStorage', value)}
-                          />
-                        </td>
-                        <td className="p-4 text-gray-600">R$ 20–80</td>
-                        <td className="p-4 text-gray-600">Arquivos, cache</td>
+                        <td className="p-4 text-gray-600">Capacitação e documentação</td>
                       </tr>
                     </tbody>
                   </table>
+                </div>
+                <div className="p-4 bg-blue-50 border-t">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">Total Implantação:</span>
+                    <span className="text-xl font-bold text-blue-600">
+                      {formatCurrency(totalCustosImplantacaoFonte)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Custos Mensais Fixos */}
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div className="flex justify-between items-center p-4 bg-green-100 border-b">
+                  <h3 className="text-xl font-bold">💰 Custos Mensais Fixos</h3>
+                  <Button
+                    onClick={() => {
+                      const newId = Math.max(0, ...custosFonte.mensaisFixos.map(i => i.id)) + 1;
+                      setCustosFonte(prev => ({
+                        ...prev,
+                        mensaisFixos: [
+                          ...prev.mensaisFixos,
+                          { id: newId, nome: 'Novo Custo', valor: 0, descricao: '' }
+                        ]
+                      }));
+                    }}
+                    className="gap-2"
+                  >
+                    ➕ Adicionar Custo
+                  </Button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-calc-table-header text-white">
+                        <th className="p-4 text-left font-semibold">Nome</th>
+                        <th className="p-4 text-left font-semibold">Valor Mensal</th>
+                        <th className="p-4 text-left font-semibold">Descrição</th>
+                        <th className="p-4 text-center font-semibold w-20">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {custosFonte.mensaisFixos.map((item) => (
+                        <tr key={item.id} className="hover:bg-gray-50 border-b">
+                          <td className="p-4">
+                            <input
+                              type="text"
+                              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md font-medium focus:outline-none focus:border-blue-500"
+                              value={item.nome}
+                              onChange={(e) => {
+                                setCustosFonte(prev => ({
+                                  ...prev,
+                                  mensaisFixos: prev.mensaisFixos.map(i =>
+                                    i.id === item.id ? { ...i, nome: e.target.value } : i
+                                  )
+                                }));
+                              }}
+                            />
+                          </td>
+                          <td className="p-4">
+                            <InputCell
+                              value={item.valor}
+                              onChange={(value) => {
+                                setCustosFonte(prev => ({
+                                  ...prev,
+                                  mensaisFixos: prev.mensaisFixos.map(i =>
+                                    i.id === item.id ? { ...i, valor: value } : i
+                                  )
+                                }));
+                              }}
+                            />
+                          </td>
+                          <td className="p-4">
+                            <input
+                              type="text"
+                              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md text-gray-600 focus:outline-none focus:border-blue-500"
+                              value={item.descricao}
+                              onChange={(e) => {
+                                setCustosFonte(prev => ({
+                                  ...prev,
+                                  mensaisFixos: prev.mensaisFixos.map(i =>
+                                    i.id === item.id ? { ...i, descricao: e.target.value } : i
+                                  )
+                                }));
+                              }}
+                              placeholder="Descrição opcional"
+                            />
+                          </td>
+                          <td className="p-4 text-center">
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => {
+                                setCustosFonte(prev => ({
+                                  ...prev,
+                                  mensaisFixos: prev.mensaisFixos.filter(i => i.id !== item.id)
+                                }));
+                              }}
+                            >
+                              🗑️
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="p-4 bg-green-50 border-t">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">Total Mensal:</span>
+                    <span className="text-xl font-bold text-green-600">
+                      {formatCurrency(totalCustosMensaisFonte)}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -896,15 +921,15 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                 <h3 className="text-xl font-bold mb-4">📊 Resumo dos Custos Base</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-white/10 p-4 rounded-lg">
-                    <div className="text-sm opacity-90">Total RH/Mês</div>
+                    <div className="text-sm opacity-90">Total Implantação (One-time)</div>
                     <div className="text-2xl font-bold">
-                      {formatCurrency(Object.values(custosFonte.recursosHumanos).reduce((sum, val) => sum + val, 0))}
+                      {formatCurrency(totalCustosImplantacaoFonte)}
                     </div>
                   </div>
                   <div className="bg-white/10 p-4 rounded-lg">
-                    <div className="text-sm opacity-90">Total Infra/Mês</div>
+                    <div className="text-sm opacity-90">Total Custos Mensais</div>
                     <div className="text-2xl font-bold">
-                      {formatCurrency(Object.values(custosFonte.infraestrutura).reduce((sum, val) => sum + val, 0))}
+                      {formatCurrency(totalCustosMensaisFonte)}
                     </div>
                   </div>
                 </div>
