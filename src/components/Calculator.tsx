@@ -932,12 +932,11 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-calc-table-header text-white">
-                        <th className="p-4 text-left font-semibold min-w-[250px]">Nome</th>
+                        <th className="p-4 text-left font-semibold min-w-[300px]">Item</th>
                         <th className="p-4 text-left font-semibold w-28">Custo Base</th>
                         <th className="p-4 text-left font-semibold w-20">Baixa %</th>
                         <th className="p-4 text-left font-semibold w-20">Média %</th>
                         <th className="p-4 text-left font-semibold w-20">Alta %</th>
-                        <th className="p-4 text-left font-semibold min-w-[180px]">Descrição</th>
                         <th className="p-4 text-left font-semibold w-32">Observações</th>
                         <th className="p-4 text-center font-semibold w-20">Ações</th>
                       </tr>
@@ -946,19 +945,36 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                       {custosFonte.implantacao.map((item) => (
                         <tr key={item.id} className="hover:bg-gray-50 border-b">
                           <td className="p-4">
-                            <input
-                              type="text"
-                              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md font-medium focus:outline-none focus:border-blue-500"
-                              value={item.nome}
-                              onChange={(e) => {
-                                setCustosFonte(prev => ({
-                                  ...prev,
-                                  implantacao: prev.implantacao.map(i =>
-                                    i.id === item.id ? { ...i, nome: e.target.value } : i
-                                  )
-                                }));
-                              }}
-                            />
+                            <div className="space-y-2">
+                              <input
+                                type="text"
+                                className="w-full px-3 py-2 border-2 border-gray-300 rounded-md font-medium focus:outline-none focus:border-blue-500"
+                                value={item.nome}
+                                onChange={(e) => {
+                                  setCustosFonte(prev => ({
+                                    ...prev,
+                                    implantacao: prev.implantacao.map(i =>
+                                      i.id === item.id ? { ...i, nome: e.target.value } : i
+                                    )
+                                  }));
+                                }}
+                                placeholder="Nome do item"
+                              />
+                              <input
+                                type="text"
+                                className="w-full px-3 py-1.5 border border-gray-200 rounded-md text-sm text-gray-600 focus:outline-none focus:border-blue-400"
+                                value={item.descricao}
+                                onChange={(e) => {
+                                  setCustosFonte(prev => ({
+                                    ...prev,
+                                    implantacao: prev.implantacao.map(i =>
+                                      i.id === item.id ? { ...i, descricao: e.target.value } : i
+                                    )
+                                  }));
+                                }}
+                                placeholder="Descrição curta"
+                              />
+                            </div>
                           </td>
                           <td className="p-4">
                             <InputCell
@@ -989,22 +1005,6 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                             <InputCell
                               value={item.multiplicadores.alta}
                               onChange={(value) => updateMultiplicadorItem('implantacao', item.id, 'alta', value)}
-                            />
-                          </td>
-                          <td className="p-4">
-                            <input
-                              type="text"
-                              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md text-gray-600 focus:outline-none focus:border-blue-500"
-                              value={item.descricao}
-                              onChange={(e) => {
-                                setCustosFonte(prev => ({
-                                  ...prev,
-                                  implantacao: prev.implantacao.map(i =>
-                                    i.id === item.id ? { ...i, descricao: e.target.value } : i
-                                  )
-                                }));
-                              }}
-                              placeholder="Descrição curta"
                             />
                           </td>
                           <td className="p-4">
@@ -1094,12 +1094,11 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-calc-table-header text-white">
-                        <th className="p-4 text-left font-semibold min-w-[250px]">Nome</th>
+                        <th className="p-4 text-left font-semibold min-w-[300px]">Item</th>
                         <th className="p-4 text-left font-semibold w-28">Valor Mensal</th>
                         <th className="p-4 text-left font-semibold w-20">Baixa %</th>
                         <th className="p-4 text-left font-semibold w-20">Média %</th>
                         <th className="p-4 text-left font-semibold w-20">Alta %</th>
-                        <th className="p-4 text-left font-semibold min-w-[180px]">Descrição</th>
                         <th className="p-4 text-left font-semibold w-32">Observações</th>
                         <th className="p-4 text-center font-semibold w-20">Ações</th>
                       </tr>
@@ -1108,19 +1107,36 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                       {custosFonte.mensaisFixos.map((item) => (
                         <tr key={item.id} className="hover:bg-gray-50 border-b">
                           <td className="p-4">
-                            <input
-                              type="text"
-                              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md font-medium focus:outline-none focus:border-blue-500"
-                              value={item.nome}
-                              onChange={(e) => {
-                                setCustosFonte(prev => ({
-                                  ...prev,
-                                  mensaisFixos: prev.mensaisFixos.map(i =>
-                                    i.id === item.id ? { ...i, nome: e.target.value } : i
-                                  )
-                                }));
-                              }}
-                            />
+                            <div className="space-y-2">
+                              <input
+                                type="text"
+                                className="w-full px-3 py-2 border-2 border-gray-300 rounded-md font-medium focus:outline-none focus:border-blue-500"
+                                value={item.nome}
+                                onChange={(e) => {
+                                  setCustosFonte(prev => ({
+                                    ...prev,
+                                    mensaisFixos: prev.mensaisFixos.map(i =>
+                                      i.id === item.id ? { ...i, nome: e.target.value } : i
+                                    )
+                                  }));
+                                }}
+                                placeholder="Nome do item"
+                              />
+                              <input
+                                type="text"
+                                className="w-full px-3 py-1.5 border border-gray-200 rounded-md text-sm text-gray-600 focus:outline-none focus:border-blue-400"
+                                value={item.descricao}
+                                onChange={(e) => {
+                                  setCustosFonte(prev => ({
+                                    ...prev,
+                                    mensaisFixos: prev.mensaisFixos.map(i =>
+                                      i.id === item.id ? { ...i, descricao: e.target.value } : i
+                                    )
+                                  }));
+                                }}
+                                placeholder="Descrição curta"
+                              />
+                            </div>
                           </td>
                           <td className="p-4">
                             <InputCell
@@ -1151,22 +1167,6 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                             <InputCell
                               value={item.multiplicadores.alta}
                               onChange={(value) => updateMultiplicadorItem('mensaisFixos', item.id, 'alta', value)}
-                            />
-                          </td>
-                          <td className="p-4">
-                            <input
-                              type="text"
-                              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md text-gray-600 focus:outline-none focus:border-blue-500"
-                              value={item.descricao}
-                              onChange={(e) => {
-                                setCustosFonte(prev => ({
-                                  ...prev,
-                                  mensaisFixos: prev.mensaisFixos.map(i =>
-                                    i.id === item.id ? { ...i, descricao: e.target.value } : i
-                                  )
-                                }));
-                              }}
-                              placeholder="Descrição curta"
                             />
                           </td>
                           <td className="p-4">
