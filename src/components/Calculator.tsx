@@ -57,6 +57,8 @@ interface EntregavelComercial {
   precoVenda: number;
   custosRelacionados: number[]; // IDs dos custos da aba custos-fonte
   observacoes: string;
+  complexidade: 'baixa' | 'media' | 'alta';
+  tipo: 'implantacao' | 'mensal'; // Tipo do entregável
 }
 
 interface CustosFonte {
@@ -272,7 +274,9 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
       quantidade: 1,
       precoVenda: 3800,
       custosRelacionados: [1, 2],
-      observacoes: 'Base existente, foco qualificação'
+      observacoes: 'Base existente, foco qualificação',
+      complexidade: 'media',
+      tipo: 'implantacao'
     },
     {
       id: 2,
@@ -280,7 +284,9 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
       quantidade: 1,
       precoVenda: 5500,
       custosRelacionados: [1, 3],
-      observacoes: 'Fluxos automatizados integrados'
+      observacoes: 'Fluxos automatizados integrados',
+      complexidade: 'media',
+      tipo: 'implantacao'
     }
   ]);
 
@@ -554,37 +560,41 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
         <div className="p-8">
           {activeTab === 'comercial' && (
             <div className="space-y-8">
-              <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-bold text-gray-800">💰 Precificação Comercial</h2>
-                <Button
-                  onClick={() => {
-                    const newId = Math.max(0, ...entregaveisComerciais.map(e => e.id)) + 1;
-                    setEntregaveisComerciais(prev => [
-                      ...prev,
-                      {
-                        id: newId,
-                        nome: 'Novo Entregável',
-                        quantidade: 1,
-                        precoVenda: 0,
-                        custosRelacionados: [],
-                        observacoes: ''
-                      }
-                    ]);
-                  }}
-                  className="gap-2"
-                >
-                  ➕ Adicionar Entregável
-                </Button>
-              </div>
+              <h2 className="text-3xl font-bold text-gray-800">💰 Precificação Comercial</h2>
               
-              {/* Entregáveis Table */}
+              {/* Entregáveis de Implantação */}
               <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div className="flex justify-between items-center p-4 bg-blue-100 border-b">
+                  <h3 className="text-xl font-bold">📦 Entregáveis de Implantação (One-time)</h3>
+                  <Button
+                    onClick={() => {
+                      const newId = Math.max(0, ...entregaveisComerciais.map(e => e.id)) + 1;
+                      setEntregaveisComerciais(prev => [
+                        ...prev,
+                        {
+                          id: newId,
+                          nome: 'Novo Entregável',
+                          quantidade: 1,
+                          precoVenda: 0,
+                          custosRelacionados: [],
+                          observacoes: '',
+                          complexidade: 'media',
+                          tipo: 'implantacao'
+                        }
+                      ]);
+                    }}
+                    className="gap-2"
+                  >
+                    ➕ Adicionar Entregável
+                  </Button>
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-calc-table-header text-white">
                         <th className="p-4 text-left font-semibold min-w-[200px]">Nome</th>
                         <th className="p-4 text-left font-semibold w-28">Quantidade</th>
+                        <th className="p-4 text-left font-semibold w-32">Complexidade</th>
                         <th className="p-4 text-left font-semibold min-w-[250px]">Custos Correlacionados</th>
                         <th className="p-4 text-left font-semibold min-w-[200px]">Observações</th>
                         <th className="p-4 text-left font-semibold w-32">Preço Venda (R$)</th>
@@ -594,13 +604,18 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {entregaveisComerciais.map((entregavel) => {
-                        // Calcular custo interno baseado nos custos selecionados
+                      {entregaveisComerciais.filter(e => e.tipo === 'implantacao').map((entregavel) => {
+                        // Calcular custo interno baseado nos custos selecionados e complexidade
                         const custoInterno = entregavel.custosRelacionados.reduce((sum, custoId) => {
                           const custoItem = custosFonte.implantacao.find(c => c.id === custoId);
                           if (custoItem) {
-                            // Usar multiplicador "media" por padrão
-                            const custoAjustado = custoItem.valor * (1 + custoItem.multiplicadores.media / 100);
+                            // Usar multiplicador baseado na complexidade selecionada
+                            const multiplicador = entregavel.complexidade === 'baixa' 
+                              ? custoItem.multiplicadores.baixa 
+                              : entregavel.complexidade === 'alta' 
+                              ? custoItem.multiplicadores.alta 
+                              : custoItem.multiplicadores.media;
+                            const custoAjustado = custoItem.valor * (1 + multiplicador / 100);
                             return sum + custoAjustado;
                           }
                           return sum;
@@ -649,6 +664,25 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                                   ));
                                 }}
                               />
+                            </td>
+                            <td className="p-4">
+                              <Select
+                                value={entregavel.complexidade}
+                                onValueChange={(value: 'baixa' | 'media' | 'alta') => {
+                                  setEntregaveisComerciais(prev => prev.map(item =>
+                                    item.id === entregavel.id ? { ...item, complexidade: value } : item
+                                  ));
+                                }}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="baixa">Baixa</SelectItem>
+                                  <SelectItem value="media">Média</SelectItem>
+                                  <SelectItem value="alta">Alta</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </td>
                             <td className="p-4">
                               <Select
@@ -775,18 +809,270 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                 </div>
               </div>
 
+              {/* Entregáveis Mensais */}
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div className="flex justify-between items-center p-4 bg-green-100 border-b">
+                  <h3 className="text-xl font-bold">📅 Entregáveis Mensais (Recorrente)</h3>
+                  <Button
+                    onClick={() => {
+                      const newId = Math.max(0, ...entregaveisComerciais.map(e => e.id)) + 1;
+                      setEntregaveisComerciais(prev => [
+                        ...prev,
+                        {
+                          id: newId,
+                          nome: 'Novo Entregável Mensal',
+                          quantidade: 1,
+                          precoVenda: 0,
+                          custosRelacionados: [],
+                          observacoes: '',
+                          complexidade: 'media',
+                          tipo: 'mensal'
+                        }
+                      ]);
+                    }}
+                    className="gap-2"
+                  >
+                    ➕ Adicionar Entregável Mensal
+                  </Button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-calc-table-header text-white">
+                        <th className="p-4 text-left font-semibold min-w-[200px]">Nome</th>
+                        <th className="p-4 text-left font-semibold w-28">Quantidade</th>
+                        <th className="p-4 text-left font-semibold w-32">Complexidade</th>
+                        <th className="p-4 text-left font-semibold min-w-[250px]">Custos Correlacionados</th>
+                        <th className="p-4 text-left font-semibold min-w-[200px]">Observações</th>
+                        <th className="p-4 text-left font-semibold w-32">Preço Venda (R$)</th>
+                        <th className="p-4 text-left font-semibold w-32">Custo Interno (R$)</th>
+                        <th className="p-4 text-left font-semibold w-32">Margem (%)</th>
+                        <th className="p-4 text-center font-semibold w-20">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {entregaveisComerciais.filter(e => e.tipo === 'mensal').map((entregavel) => {
+                        // Calcular custo interno baseado nos custos mensais selecionados e complexidade
+                        const custoInterno = entregavel.custosRelacionados.reduce((sum, custoId) => {
+                          const custoItem = custosFonte.mensaisFixos.find(c => c.id === custoId);
+                          if (custoItem) {
+                            // Usar multiplicador baseado na complexidade selecionada
+                            const multiplicador = entregavel.complexidade === 'baixa' 
+                              ? custoItem.multiplicadores.baixa 
+                              : entregavel.complexidade === 'alta' 
+                              ? custoItem.multiplicadores.alta 
+                              : custoItem.multiplicadores.media;
+                            const custoAjustado = custoItem.valor * (1 + multiplicador / 100);
+                            return sum + custoAjustado;
+                          }
+                          return sum;
+                        }, 0) * entregavel.quantidade;
+
+                        const margem = calculateMargin(entregavel.precoVenda, custoInterno);
+                        
+                        // Contar quantas vezes cada custo é usado
+                        const custosUsados = new Map<number, number>();
+                        entregaveisComerciais.forEach(e => {
+                          e.custosRelacionados.forEach(id => {
+                            custosUsados.set(id, (custosUsados.get(id) || 0) + 1);
+                          });
+                        });
+
+                        // Gerar lista de custos selecionados com descrições
+                        const listaCustos = entregavel.custosRelacionados
+                          .map(id => {
+                            const custo = custosFonte.mensaisFixos.find(c => c.id === id);
+                            return custo ? `${custo.nome} (${custo.descricao})` : '';
+                          })
+                          .filter(Boolean)
+                          .join('; ');
+
+                        return (
+                          <tr key={entregavel.id} className="hover:bg-gray-50 border-b">
+                            <td className="p-4">
+                              <input
+                                type="text"
+                                className="w-full px-3 py-2 border-2 border-gray-300 rounded-md font-medium focus:outline-none focus:border-blue-500"
+                                value={entregavel.nome}
+                                onChange={(e) => {
+                                  setEntregaveisComerciais(prev => prev.map(item =>
+                                    item.id === entregavel.id ? { ...item, nome: e.target.value } : item
+                                  ));
+                                }}
+                                placeholder="Nome do entregável"
+                              />
+                            </td>
+                            <td className="p-4">
+                              <InputCell
+                                value={entregavel.quantidade}
+                                onChange={(value) => {
+                                  setEntregaveisComerciais(prev => prev.map(item =>
+                                    item.id === entregavel.id ? { ...item, quantidade: value } : item
+                                  ));
+                                }}
+                              />
+                            </td>
+                            <td className="p-4">
+                              <Select
+                                value={entregavel.complexidade}
+                                onValueChange={(value: 'baixa' | 'media' | 'alta') => {
+                                  setEntregaveisComerciais(prev => prev.map(item =>
+                                    item.id === entregavel.id ? { ...item, complexidade: value } : item
+                                  ));
+                                }}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="baixa">Baixa</SelectItem>
+                                  <SelectItem value="media">Média</SelectItem>
+                                  <SelectItem value="alta">Alta</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </td>
+                            <td className="p-4">
+                              <Select
+                                value=""
+                                onValueChange={(value) => {
+                                  const custoId = parseInt(value);
+                                  if (!entregavel.custosRelacionados.includes(custoId)) {
+                                    setEntregaveisComerciais(prev => prev.map(item =>
+                                      item.id === entregavel.id 
+                                        ? { ...item, custosRelacionados: [...item.custosRelacionados, custoId] }
+                                        : item
+                                    ));
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Adicionar custo..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {custosFonte.mensaisFixos.map(custo => {
+                                    const contador = custosUsados.get(custo.id) || 0;
+                                    return (
+                                      <SelectItem key={custo.id} value={custo.id.toString()}>
+                                        {custo.nome} {contador > 0 ? `(usado ${contador}x)` : ''}
+                                      </SelectItem>
+                                    );
+                                  })}
+                                </SelectContent>
+                              </Select>
+                              {entregavel.custosRelacionados.length > 0 && (
+                                <div className="mt-2 flex flex-wrap gap-1">
+                                  {entregavel.custosRelacionados.map(custoId => {
+                                    const custo = custosFonte.mensaisFixos.find(c => c.id === custoId);
+                                    return custo ? (
+                                      <span
+                                        key={custoId}
+                                        className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs"
+                                      >
+                                        {custo.nome}
+                                        <button
+                                          onClick={() => {
+                                            setEntregaveisComerciais(prev => prev.map(item =>
+                                              item.id === entregavel.id
+                                                ? { 
+                                                    ...item, 
+                                                    custosRelacionados: item.custosRelacionados.filter(id => id !== custoId)
+                                                  }
+                                                : item
+                                            ));
+                                          }}
+                                          className="text-green-900 hover:text-red-600"
+                                        >
+                                          ×
+                                        </button>
+                                      </span>
+                                    ) : null;
+                                  })}
+                                </div>
+                              )}
+                            </td>
+                            <td className="p-4">
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="outline" size="sm" className="w-full">
+                                    {entregavel.observacoes || listaCustos ? '📝 Ver' : '➕ Adicionar'}
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-2xl">
+                                  <DialogHeader>
+                                    <DialogTitle>Observações - {entregavel.nome}</DialogTitle>
+                                  </DialogHeader>
+                                  <div className="space-y-4">
+                                    <div>
+                                      <label className="text-sm font-semibold text-gray-700">Custos Selecionados:</label>
+                                      <p className="text-sm text-gray-600 mt-1">{listaCustos || 'Nenhum custo selecionado'}</p>
+                                    </div>
+                                    <div>
+                                      <label className="text-sm font-semibold text-gray-700">Observações Adicionais:</label>
+                                      <Textarea
+                                        value={entregavel.observacoes}
+                                        onChange={(e) => {
+                                          setEntregaveisComerciais(prev => prev.map(item =>
+                                            item.id === entregavel.id ? { ...item, observacoes: e.target.value } : item
+                                          ));
+                                        }}
+                                        placeholder="Adicione observações adicionais..."
+                                        className="min-h-[150px] mt-2"
+                                      />
+                                    </div>
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                            </td>
+                            <td className="p-4">
+                              <InputCell
+                                value={entregavel.precoVenda}
+                                onChange={(value) => {
+                                  setEntregaveisComerciais(prev => prev.map(item =>
+                                    item.id === entregavel.id ? { ...item, precoVenda: value } : item
+                                  ));
+                                }}
+                              />
+                            </td>
+                            <td className="p-4 text-gray-600">{formatCurrency(custoInterno)}</td>
+                            <td className="p-4">
+                              <MarginIndicator value={margem} type="percentage" margin={margem} />
+                            </td>
+                            <td className="p-4 text-center">
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => {
+                                  setEntregaveisComerciais(prev => prev.filter(item => item.id !== entregavel.id));
+                                }}
+                              >
+                                🗑️
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
               {/* Summary */}
               <SummaryCard
                 data={{
-                  totalImplantacao: entregaveisComerciais.reduce((sum, e) => sum + e.precoVenda, 0),
-                  totalRecorrencia: totals.recorrencia,
+                  totalImplantacao: entregaveisComerciais.filter(e => e.tipo === 'implantacao').reduce((sum, e) => sum + e.precoVenda, 0),
+                  totalRecorrencia: entregaveisComerciais.filter(e => e.tipo === 'mensal').reduce((sum, e) => sum + e.precoVenda, 0) + totals.recorrencia,
                   margemImplantacao: calculateMargin(
-                    entregaveisComerciais.reduce((sum, e) => sum + e.precoVenda, 0),
-                    entregaveisComerciais.reduce((sum, e) => {
+                    entregaveisComerciais.filter(e => e.tipo === 'implantacao').reduce((sum, e) => sum + e.precoVenda, 0),
+                    entregaveisComerciais.filter(e => e.tipo === 'implantacao').reduce((sum, e) => {
                       const custo = e.custosRelacionados.reduce((cSum, custoId) => {
                         const custoItem = custosFonte.implantacao.find(c => c.id === custoId);
                         if (custoItem) {
-                          const custoAjustado = custoItem.valor * (1 + custoItem.multiplicadores.media / 100);
+                          const multiplicador = e.complexidade === 'baixa' 
+                            ? custoItem.multiplicadores.baixa 
+                            : e.complexidade === 'alta' 
+                            ? custoItem.multiplicadores.alta 
+                            : custoItem.multiplicadores.media;
+                          const custoAjustado = custoItem.valor * (1 + multiplicador / 100);
                           return cSum + custoAjustado;
                         }
                         return cSum;
@@ -794,76 +1080,31 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                       return sum + custo;
                     }, 0)
                   ),
-                  margemRecorrencia: margins.recorrencia
+                  margemRecorrencia: calculateMargin(
+                    entregaveisComerciais.filter(e => e.tipo === 'mensal').reduce((sum, e) => sum + e.precoVenda, 0) + totals.recorrencia,
+                    entregaveisComerciais.filter(e => e.tipo === 'mensal').reduce((sum, e) => {
+                      const custo = e.custosRelacionados.reduce((cSum, custoId) => {
+                        const custoItem = custosFonte.mensaisFixos.find(c => c.id === custoId);
+                        if (custoItem) {
+                          const multiplicador = e.complexidade === 'baixa' 
+                            ? custoItem.multiplicadores.baixa 
+                            : e.complexidade === 'alta' 
+                            ? custoItem.multiplicadores.alta 
+                            : custoItem.multiplicadores.media;
+                          const custoAjustado = custoItem.valor * (1 + multiplicador / 100);
+                          return cSum + custoAjustado;
+                        }
+                        return cSum;
+                      }, 0) * e.quantidade;
+                      return sum + custo;
+                    }, 0) + totals.custoRecorrencia
+                  )
                 }}
                 formatCurrency={formatCurrency}
               />
 
-              <div className={`p-6 rounded-xl text-center text-xl font-bold text-white ${
-                calculateMargin(
-                  entregaveisComerciais.reduce((sum, e) => sum + e.precoVenda, 0),
-                  entregaveisComerciais.reduce((sum, e) => {
-                    const custo = e.custosRelacionados.reduce((cSum, custoId) => {
-                      const custoItem = custosFonte.implantacao.find(c => c.id === custoId);
-                      if (custoItem) {
-                        const custoAjustado = custoItem.valor * (1 + custoItem.multiplicadores.media / 100);
-                        return cSum + custoAjustado;
-                      }
-                      return cSum;
-                    }, 0) * e.quantidade;
-                    return sum + custo;
-                  }, 0)
-                ) >= 60 && margins.recorrencia >= 45 
-                  ? 'bg-calc-margin-excellent' 
-                  : calculateMargin(
-                      entregaveisComerciais.reduce((sum, e) => sum + e.precoVenda, 0),
-                      entregaveisComerciais.reduce((sum, e) => {
-                        const custo = e.custosRelacionados.reduce((cSum, custoId) => {
-                          const custoItem = custosFonte.implantacao.find(c => c.id === custoId);
-                          if (custoItem) {
-                            const custoAjustado = custoItem.valor * (1 + custoItem.multiplicadores.media / 100);
-                            return cSum + custoAjustado;
-                          }
-                          return cSum;
-                        }, 0) * e.quantidade;
-                        return sum + custo;
-                      }, 0)
-                    ) >= 45 && margins.recorrencia >= 35
-                  ? 'bg-calc-margin-good'
-                  : 'bg-calc-margin-poor'
-              }`}>
-                {calculateMargin(
-                  entregaveisComerciais.reduce((sum, e) => sum + e.precoVenda, 0),
-                  entregaveisComerciais.reduce((sum, e) => {
-                    const custo = e.custosRelacionados.reduce((cSum, custoId) => {
-                      const custoItem = custosFonte.implantacao.find(c => c.id === custoId);
-                      if (custoItem) {
-                        const custoAjustado = custoItem.valor * (1 + custoItem.multiplicadores.media / 100);
-                        return cSum + custoAjustado;
-                      }
-                      return cSum;
-                    }, 0) * e.quantidade;
-                    return sum + custo;
-                  }, 0)
-                ) >= 60 && margins.recorrencia >= 45
-                  ? '🎯 VIABILIDADE EXCELENTE - Margens dentro do padrão ideal!'
-                  : calculateMargin(
-                      entregaveisComerciais.reduce((sum, e) => sum + e.precoVenda, 0),
-                      entregaveisComerciais.reduce((sum, e) => {
-                        const custo = e.custosRelacionados.reduce((cSum, custoId) => {
-                          const custoItem = custosFonte.implantacao.find(c => c.id === custoId);
-                          if (custoItem) {
-                            const custoAjustado = custoItem.valor * (1 + custoItem.multiplicadores.media / 100);
-                            return cSum + custoAjustado;
-                          }
-                          return cSum;
-                        }, 0) * e.quantidade;
-                        return sum + custo;
-                      }, 0)
-                    ) >= 45 && margins.recorrencia >= 35
-                  ? '✅ VIABILIDADE BOA - Margens aceitáveis!'
-                  : '⚠️ VIABILIDADE CRÍTICA - Revisar preços!'
-                }
+              <div className="p-6 rounded-xl text-center text-xl font-bold text-white bg-calc-margin-excellent">
+                🎯 Precificação Comercial Configurada!
               </div>
             </div>
           )}
