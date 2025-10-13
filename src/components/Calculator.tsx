@@ -55,19 +55,23 @@ interface CustosFonte {
     nome: string;
     valor: number;
     descricao: string;
+    multiplicadores: {
+      baixa: number;
+      media: number;
+      alta: number;
+    };
   }>;
   mensaisFixos: Array<{
     id: number;
     nome: string;
     valor: number;
     descricao: string;
+    multiplicadores: {
+      baixa: number;
+      media: number;
+      alta: number;
+    };
   }>;
-}
-
-interface MultiplicadoresComplexidade {
-  baixa: number; // % desconto
-  media: number; // neutro (0%)
-  alta: number; // % aumento
 }
 
 const CUSTOS_INTERNOS = {
@@ -160,35 +164,79 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
 
   const [custosFonte, setCustosFonte] = useState<CustosFonte>({
     implantacao: [
-      { id: 1, nome: 'Setup Inicial', valor: 800, descricao: 'Configuração inicial do ambiente' },
-      { id: 2, nome: 'Configuração Servidor', valor: 500, descricao: 'Deploy e configuração de infraestrutura' },
-      { id: 3, nome: 'Migração de Dados', valor: 1200, descricao: 'Importação e estruturação de dados' },
-      { id: 4, nome: 'Treinamento Equipe', valor: 600, descricao: 'Capacitação e documentação' }
+      { 
+        id: 1, 
+        nome: 'Setup Inicial', 
+        valor: 800, 
+        descricao: 'Configuração inicial do ambiente',
+        multiplicadores: { baixa: -30, media: 0, alta: 50 }
+      },
+      { 
+        id: 2, 
+        nome: 'Configuração Servidor', 
+        valor: 500, 
+        descricao: 'Deploy e configuração de infraestrutura',
+        multiplicadores: { baixa: -30, media: 0, alta: 50 }
+      },
+      { 
+        id: 3, 
+        nome: 'Migração de Dados', 
+        valor: 1200, 
+        descricao: 'Importação e estruturação de dados',
+        multiplicadores: { baixa: -30, media: 0, alta: 50 }
+      },
+      { 
+        id: 4, 
+        nome: 'Treinamento Equipe', 
+        valor: 600, 
+        descricao: 'Capacitação e documentação',
+        multiplicadores: { baixa: -30, media: 0, alta: 50 }
+      }
     ],
     mensaisFixos: [
-      { id: 1, nome: 'Servidor VPS', valor: 100, descricao: '2-8GB RAM' },
-      { id: 2, nome: 'Banco de Dados', valor: 80, descricao: 'PostgreSQL/MySQL' },
-      { id: 3, nome: 'APIs Externas', valor: 70, descricao: 'Integrações' },
-      { id: 4, nome: 'Serviços IA (OpenAI)', valor: 150, descricao: 'Conforme uso' },
-      { id: 5, nome: 'Monitoramento', valor: 60, descricao: 'Logs e métricas' },
-      { id: 6, nome: 'CDN e Storage', valor: 30, descricao: 'Arquivos e cache' }
+      { 
+        id: 1, 
+        nome: 'Servidor VPS', 
+        valor: 100, 
+        descricao: '2-8GB RAM',
+        multiplicadores: { baixa: -30, media: 0, alta: 50 }
+      },
+      { 
+        id: 2, 
+        nome: 'Banco de Dados', 
+        valor: 80, 
+        descricao: 'PostgreSQL/MySQL',
+        multiplicadores: { baixa: -30, media: 0, alta: 50 }
+      },
+      { 
+        id: 3, 
+        nome: 'APIs Externas', 
+        valor: 70, 
+        descricao: 'Integrações',
+        multiplicadores: { baixa: -30, media: 0, alta: 50 }
+      },
+      { 
+        id: 4, 
+        nome: 'Serviços IA (OpenAI)', 
+        valor: 150, 
+        descricao: 'Conforme uso',
+        multiplicadores: { baixa: -30, media: 0, alta: 50 }
+      },
+      { 
+        id: 5, 
+        nome: 'Monitoramento', 
+        valor: 60, 
+        descricao: 'Logs e métricas',
+        multiplicadores: { baixa: -30, media: 0, alta: 50 }
+      },
+      { 
+        id: 6, 
+        nome: 'CDN e Storage', 
+        valor: 30, 
+        descricao: 'Arquivos e cache',
+        multiplicadores: { baixa: -30, media: 0, alta: 50 }
+      }
     ]
-  });
-
-  const [multiplicadoresComplexidade, setMultiplicadoresComplexidade] = useState<{
-    implantacao: MultiplicadoresComplexidade;
-    recorrencia: MultiplicadoresComplexidade;
-  }>({
-    implantacao: {
-      baixa: -30, // 30% desconto
-      media: 0,   // sem alteração
-      alta: 50    // 50% aumento
-    },
-    recorrencia: {
-      baixa: -30,
-      media: 0,
-      alta: 50
-    }
   });
 
   const canEditObservacoes = true; // Permissões globais - todos podem editar
@@ -285,31 +333,38 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
     ));
   }, []);
 
-  const updateMultiplicador = useCallback((
-    tipo: 'implantacao' | 'recorrencia',
-    nivel: keyof MultiplicadoresComplexidade,
+  const updateMultiplicadorItem = useCallback((
+    tipo: 'implantacao' | 'mensaisFixos',
+    itemId: number,
+    nivel: 'baixa' | 'media' | 'alta',
     valor: number
   ) => {
-    setMultiplicadoresComplexidade(prev => ({
+    setCustosFonte(prev => ({
       ...prev,
-      [tipo]: {
-        ...prev[tipo],
-        [nivel]: valor
-      }
+      [tipo]: prev[tipo].map(item =>
+        item.id === itemId 
+          ? { 
+              ...item, 
+              multiplicadores: { 
+                ...item.multiplicadores, 
+                [nivel]: valor 
+              } 
+            }
+          : item
+      )
     }));
   }, []);
 
   const adjustCostByComplexity = (
     baseCost: number, 
     level: ComplexityLevel, 
-    tipo: 'implantacao' | 'recorrencia'
+    multiplicadores: { baixa: number; media: number; alta: number }
   ) => {
     if (level === 'removed') return 0;
     
-    const mults = multiplicadoresComplexidade[tipo];
-    if (level === 'low') return baseCost * (1 + mults.baixa / 100);
-    if (level === 'high') return baseCost * (1 + mults.alta / 100);
-    return baseCost; // medium = sem alteração
+    if (level === 'low') return baseCost * (1 + multiplicadores.baixa / 100);
+    if (level === 'high') return baseCost * (1 + multiplicadores.alta / 100);
+    return baseCost * (1 + multiplicadores.media / 100); // medium
   };
 
   // Custos calculados dinamicamente baseados na fonte
@@ -335,7 +390,16 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
   const getAdjustedImplantacaoCost = (key: ImplantacaoKey) => {
     const baseCost = custosCalculados.implantacao[key];
     const level = implantacaoComplexities[key];
-    return adjustCostByComplexity(baseCost, level, 'implantacao');
+    // Use multiplicadores médios de todos os itens de implantação
+    const avgMultiplicadores = custosFonte.implantacao.reduce(
+      (acc, item) => ({
+        baixa: acc.baixa + item.multiplicadores.baixa / custosFonte.implantacao.length,
+        media: acc.media + item.multiplicadores.media / custosFonte.implantacao.length,
+        alta: acc.alta + item.multiplicadores.alta / custosFonte.implantacao.length
+      }),
+      { baixa: 0, media: 0, alta: 0 }
+    );
+    return adjustCostByComplexity(baseCost, level, avgMultiplicadores);
   };
 
   const adicionaisTotals = {
@@ -775,74 +839,6 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                   Mudanças aqui afetam automaticamente todas as simulações e cálculos.
                 </p>
               </div>
-
-              {/* Configuração de Multiplicadores de Complexidade */}
-              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                <h3 className="text-xl font-bold p-4 bg-purple-100 border-b">⚙️ Multiplicadores de Complexidade</h3>
-                <div className="p-6 space-y-6">
-                  {/* Multiplicadores Implantação */}
-                  <div>
-                    <h4 className="font-semibold text-lg mb-3">Custos de Implantação</h4>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Baixa Complexidade (%)</label>
-                        <InputCell
-                          value={multiplicadoresComplexidade.implantacao.baixa}
-                          onChange={(value) => updateMultiplicador('implantacao', 'baixa', value)}
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Desconto aplicado (valor negativo)</p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Média Complexidade (%)</label>
-                        <InputCell
-                          value={multiplicadoresComplexidade.implantacao.media}
-                          onChange={(value) => updateMultiplicador('implantacao', 'media', value)}
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Sem alteração (deixe em 0)</p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Alta Complexidade (%)</label>
-                        <InputCell
-                          value={multiplicadoresComplexidade.implantacao.alta}
-                          onChange={(value) => updateMultiplicador('implantacao', 'alta', value)}
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Aumento aplicado (valor positivo)</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Multiplicadores Recorrência */}
-                  <div className="border-t pt-6">
-                    <h4 className="font-semibold text-lg mb-3">Custos Recorrentes</h4>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Baixa Complexidade (%)</label>
-                        <InputCell
-                          value={multiplicadoresComplexidade.recorrencia.baixa}
-                          onChange={(value) => updateMultiplicador('recorrencia', 'baixa', value)}
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Desconto aplicado (valor negativo)</p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Média Complexidade (%)</label>
-                        <InputCell
-                          value={multiplicadoresComplexidade.recorrencia.media}
-                          onChange={(value) => updateMultiplicador('recorrencia', 'media', value)}
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Sem alteração (deixe em 0)</p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Alta Complexidade (%)</label>
-                        <InputCell
-                          value={multiplicadoresComplexidade.recorrencia.alta}
-                          onChange={(value) => updateMultiplicador('recorrencia', 'alta', value)}
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Aumento aplicado (valor positivo)</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
               
               {/* Custos de Implantação (One-time) */}
               <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -855,7 +851,13 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                         ...prev,
                         implantacao: [
                           ...prev.implantacao,
-                          { id: newId, nome: 'Novo Custo', valor: 0, descricao: '' }
+                          { 
+                            id: newId, 
+                            nome: 'Novo Custo', 
+                            valor: 0, 
+                            descricao: '',
+                            multiplicadores: { baixa: -30, media: 0, alta: 50 }
+                          }
                         ]
                       }));
                     }}
@@ -870,6 +872,9 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                       <tr className="bg-calc-table-header text-white">
                         <th className="p-4 text-left font-semibold">Nome</th>
                         <th className="p-4 text-left font-semibold">Custo Base</th>
+                        <th className="p-4 text-left font-semibold">Baixa %</th>
+                        <th className="p-4 text-left font-semibold">Média %</th>
+                        <th className="p-4 text-left font-semibold">Alta %</th>
                         <th className="p-4 text-left font-semibold">Descrição</th>
                         <th className="p-4 text-center font-semibold w-20">Ações</th>
                       </tr>
@@ -903,6 +908,24 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                                   )
                                 }));
                               }}
+                            />
+                          </td>
+                          <td className="p-4">
+                            <InputCell
+                              value={item.multiplicadores.baixa}
+                              onChange={(value) => updateMultiplicadorItem('implantacao', item.id, 'baixa', value)}
+                            />
+                          </td>
+                          <td className="p-4">
+                            <InputCell
+                              value={item.multiplicadores.media}
+                              onChange={(value) => updateMultiplicadorItem('implantacao', item.id, 'media', value)}
+                            />
+                          </td>
+                          <td className="p-4">
+                            <InputCell
+                              value={item.multiplicadores.alta}
+                              onChange={(value) => updateMultiplicadorItem('implantacao', item.id, 'alta', value)}
                             />
                           </td>
                           <td className="p-4">
@@ -961,7 +984,13 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                         ...prev,
                         mensaisFixos: [
                           ...prev.mensaisFixos,
-                          { id: newId, nome: 'Novo Custo', valor: 0, descricao: '' }
+                          { 
+                            id: newId, 
+                            nome: 'Novo Custo', 
+                            valor: 0, 
+                            descricao: '',
+                            multiplicadores: { baixa: -30, media: 0, alta: 50 }
+                          }
                         ]
                       }));
                     }}
@@ -976,6 +1005,9 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                       <tr className="bg-calc-table-header text-white">
                         <th className="p-4 text-left font-semibold">Nome</th>
                         <th className="p-4 text-left font-semibold">Valor Mensal</th>
+                        <th className="p-4 text-left font-semibold">Baixa %</th>
+                        <th className="p-4 text-left font-semibold">Média %</th>
+                        <th className="p-4 text-left font-semibold">Alta %</th>
                         <th className="p-4 text-left font-semibold">Descrição</th>
                         <th className="p-4 text-center font-semibold w-20">Ações</th>
                       </tr>
@@ -1009,6 +1041,24 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                                   )
                                 }));
                               }}
+                            />
+                          </td>
+                          <td className="p-4">
+                            <InputCell
+                              value={item.multiplicadores.baixa}
+                              onChange={(value) => updateMultiplicadorItem('mensaisFixos', item.id, 'baixa', value)}
+                            />
+                          </td>
+                          <td className="p-4">
+                            <InputCell
+                              value={item.multiplicadores.media}
+                              onChange={(value) => updateMultiplicadorItem('mensaisFixos', item.id, 'media', value)}
+                            />
+                          </td>
+                          <td className="p-4">
+                            <InputCell
+                              value={item.multiplicadores.alta}
+                              onChange={(value) => updateMultiplicadorItem('mensaisFixos', item.id, 'alta', value)}
                             />
                           </td>
                           <td className="p-4">
