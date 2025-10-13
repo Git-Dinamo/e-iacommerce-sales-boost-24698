@@ -50,18 +50,24 @@ interface Adicional {
 }
 
 interface CustosFonte {
-  implantacao: {
-    setupInicial: number;
-    configuracaoServidor: number;
-    migracaoDados: number;
-    treinamentoEquipe: number;
-  };
+  implantacao: Array<{
+    id: number;
+    nome: string;
+    valor: number;
+    descricao: string;
+  }>;
   mensaisFixos: Array<{
     id: number;
     nome: string;
     valor: number;
     descricao: string;
   }>;
+}
+
+interface MultiplicadoresComplexidade {
+  baixa: number; // % desconto
+  media: number; // neutro (0%)
+  alta: number; // % aumento
 }
 
 const CUSTOS_INTERNOS = {
@@ -153,12 +159,12 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
   );
 
   const [custosFonte, setCustosFonte] = useState<CustosFonte>({
-    implantacao: {
-      setupInicial: 800,
-      configuracaoServidor: 500,
-      migracaoDados: 1200,
-      treinamentoEquipe: 600
-    },
+    implantacao: [
+      { id: 1, nome: 'Setup Inicial', valor: 800, descricao: 'Configuração inicial do ambiente' },
+      { id: 2, nome: 'Configuração Servidor', valor: 500, descricao: 'Deploy e configuração de infraestrutura' },
+      { id: 3, nome: 'Migração de Dados', valor: 1200, descricao: 'Importação e estruturação de dados' },
+      { id: 4, nome: 'Treinamento Equipe', valor: 600, descricao: 'Capacitação e documentação' }
+    ],
     mensaisFixos: [
       { id: 1, nome: 'Servidor VPS', valor: 100, descricao: '2-8GB RAM' },
       { id: 2, nome: 'Banco de Dados', valor: 80, descricao: 'PostgreSQL/MySQL' },
@@ -167,6 +173,22 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
       { id: 5, nome: 'Monitoramento', valor: 60, descricao: 'Logs e métricas' },
       { id: 6, nome: 'CDN e Storage', valor: 30, descricao: 'Arquivos e cache' }
     ]
+  });
+
+  const [multiplicadoresComplexidade, setMultiplicadoresComplexidade] = useState<{
+    implantacao: MultiplicadoresComplexidade;
+    recorrencia: MultiplicadoresComplexidade;
+  }>({
+    implantacao: {
+      baixa: -30, // 30% desconto
+      media: 0,   // sem alteração
+      alta: 50    // 50% aumento
+    },
+    recorrencia: {
+      baixa: -30,
+      media: 0,
+      alta: 50
+    }
   });
 
   const canEditObservacoes = true; // Permissões globais - todos podem editar
@@ -263,25 +285,35 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
     ));
   }, []);
 
-  const updateCustosFonte = useCallback((section: keyof CustosFonte, field: string, value: number) => {
-    setCustosFonte(prev => ({
+  const updateMultiplicador = useCallback((
+    tipo: 'implantacao' | 'recorrencia',
+    nivel: keyof MultiplicadoresComplexidade,
+    valor: number
+  ) => {
+    setMultiplicadoresComplexidade(prev => ({
       ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value
+      [tipo]: {
+        ...prev[tipo],
+        [nivel]: valor
       }
     }));
   }, []);
 
-  const adjustCostByComplexity = (baseCost: number, level: ComplexityLevel) => {
+  const adjustCostByComplexity = (
+    baseCost: number, 
+    level: ComplexityLevel, 
+    tipo: 'implantacao' | 'recorrencia'
+  ) => {
     if (level === 'removed') return 0;
-    if (level === 'low') return baseCost * 0.7;
-    if (level === 'high') return baseCost * 1.3;
-    return baseCost;
+    
+    const mults = multiplicadoresComplexidade[tipo];
+    if (level === 'low') return baseCost * (1 + mults.baixa / 100);
+    if (level === 'high') return baseCost * (1 + mults.alta / 100);
+    return baseCost; // medium = sem alteração
   };
 
   // Custos calculados dinamicamente baseados na fonte
-  const totalCustosImplantacaoFonte = Object.values(custosFonte.implantacao).reduce((sum, val) => sum + val, 0);
+  const totalCustosImplantacaoFonte = custosFonte.implantacao.reduce((sum, item) => sum + item.valor, 0);
   const totalCustosMensaisFonte = custosFonte.mensaisFixos.reduce((sum, item) => sum + item.valor, 0);
 
   const custosCalculados = {
@@ -303,7 +335,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
   const getAdjustedImplantacaoCost = (key: ImplantacaoKey) => {
     const baseCost = custosCalculados.implantacao[key];
     const level = implantacaoComplexities[key];
-    return adjustCostByComplexity(baseCost, level);
+    return adjustCostByComplexity(baseCost, level, 'implantacao');
   };
 
   const adicionaisTotals = {
@@ -743,60 +775,168 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                   Mudanças aqui afetam automaticamente todas as simulações e cálculos.
                 </p>
               </div>
+
+              {/* Configuração de Multiplicadores de Complexidade */}
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <h3 className="text-xl font-bold p-4 bg-purple-100 border-b">⚙️ Multiplicadores de Complexidade</h3>
+                <div className="p-6 space-y-6">
+                  {/* Multiplicadores Implantação */}
+                  <div>
+                    <h4 className="font-semibold text-lg mb-3">Custos de Implantação</h4>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Baixa Complexidade (%)</label>
+                        <InputCell
+                          value={multiplicadoresComplexidade.implantacao.baixa}
+                          onChange={(value) => updateMultiplicador('implantacao', 'baixa', value)}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Desconto aplicado (valor negativo)</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Média Complexidade (%)</label>
+                        <InputCell
+                          value={multiplicadoresComplexidade.implantacao.media}
+                          onChange={(value) => updateMultiplicador('implantacao', 'media', value)}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Sem alteração (deixe em 0)</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Alta Complexidade (%)</label>
+                        <InputCell
+                          value={multiplicadoresComplexidade.implantacao.alta}
+                          onChange={(value) => updateMultiplicador('implantacao', 'alta', value)}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Aumento aplicado (valor positivo)</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Multiplicadores Recorrência */}
+                  <div className="border-t pt-6">
+                    <h4 className="font-semibold text-lg mb-3">Custos Recorrentes</h4>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Baixa Complexidade (%)</label>
+                        <InputCell
+                          value={multiplicadoresComplexidade.recorrencia.baixa}
+                          onChange={(value) => updateMultiplicador('recorrencia', 'baixa', value)}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Desconto aplicado (valor negativo)</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Média Complexidade (%)</label>
+                        <InputCell
+                          value={multiplicadoresComplexidade.recorrencia.media}
+                          onChange={(value) => updateMultiplicador('recorrencia', 'media', value)}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Sem alteração (deixe em 0)</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Alta Complexidade (%)</label>
+                        <InputCell
+                          value={multiplicadoresComplexidade.recorrencia.alta}
+                          onChange={(value) => updateMultiplicador('recorrencia', 'alta', value)}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Aumento aplicado (valor positivo)</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
               
               {/* Custos de Implantação (One-time) */}
               <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                <h3 className="text-xl font-bold p-4 bg-blue-100 border-b">🚀 Custos de Implantação (One-time)</h3>
+                <div className="flex justify-between items-center p-4 bg-blue-100 border-b">
+                  <h3 className="text-xl font-bold">🚀 Custos de Implantação (One-time)</h3>
+                  <Button
+                    onClick={() => {
+                      const newId = Math.max(0, ...custosFonte.implantacao.map(i => i.id)) + 1;
+                      setCustosFonte(prev => ({
+                        ...prev,
+                        implantacao: [
+                          ...prev.implantacao,
+                          { id: newId, nome: 'Novo Custo', valor: 0, descricao: '' }
+                        ]
+                      }));
+                    }}
+                    className="gap-2"
+                  >
+                    ➕ Adicionar Custo
+                  </Button>
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-calc-table-header text-white">
-                        <th className="p-4 text-left font-semibold">Item</th>
+                        <th className="p-4 text-left font-semibold">Nome</th>
                         <th className="p-4 text-left font-semibold">Custo Base</th>
                         <th className="p-4 text-left font-semibold">Descrição</th>
+                        <th className="p-4 text-center font-semibold w-20">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">Setup Inicial</td>
-                        <td className="p-4">
-                          <InputCell
-                            value={custosFonte.implantacao.setupInicial}
-                            onChange={(value) => updateCustosFonte('implantacao', 'setupInicial', value)}
-                          />
-                        </td>
-                        <td className="p-4 text-gray-600">Configuração inicial do ambiente</td>
-                      </tr>
-                      <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">Configuração Servidor</td>
-                        <td className="p-4">
-                          <InputCell
-                            value={custosFonte.implantacao.configuracaoServidor}
-                            onChange={(value) => updateCustosFonte('implantacao', 'configuracaoServidor', value)}
-                          />
-                        </td>
-                        <td className="p-4 text-gray-600">Deploy e configuração de infraestrutura</td>
-                      </tr>
-                      <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">Migração de Dados</td>
-                        <td className="p-4">
-                          <InputCell
-                            value={custosFonte.implantacao.migracaoDados}
-                            onChange={(value) => updateCustosFonte('implantacao', 'migracaoDados', value)}
-                          />
-                        </td>
-                        <td className="p-4 text-gray-600">Importação e estruturação de dados</td>
-                      </tr>
-                      <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">Treinamento Equipe</td>
-                        <td className="p-4">
-                          <InputCell
-                            value={custosFonte.implantacao.treinamentoEquipe}
-                            onChange={(value) => updateCustosFonte('implantacao', 'treinamentoEquipe', value)}
-                          />
-                        </td>
-                        <td className="p-4 text-gray-600">Capacitação e documentação</td>
-                      </tr>
+                      {custosFonte.implantacao.map((item) => (
+                        <tr key={item.id} className="hover:bg-gray-50 border-b">
+                          <td className="p-4">
+                            <input
+                              type="text"
+                              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md font-medium focus:outline-none focus:border-blue-500"
+                              value={item.nome}
+                              onChange={(e) => {
+                                setCustosFonte(prev => ({
+                                  ...prev,
+                                  implantacao: prev.implantacao.map(i =>
+                                    i.id === item.id ? { ...i, nome: e.target.value } : i
+                                  )
+                                }));
+                              }}
+                            />
+                          </td>
+                          <td className="p-4">
+                            <InputCell
+                              value={item.valor}
+                              onChange={(value) => {
+                                setCustosFonte(prev => ({
+                                  ...prev,
+                                  implantacao: prev.implantacao.map(i =>
+                                    i.id === item.id ? { ...i, valor: value } : i
+                                  )
+                                }));
+                              }}
+                            />
+                          </td>
+                          <td className="p-4">
+                            <input
+                              type="text"
+                              className="w-full px-3 py-2 border-2 border-gray-300 rounded-md text-gray-600 focus:outline-none focus:border-blue-500"
+                              value={item.descricao}
+                              onChange={(e) => {
+                                setCustosFonte(prev => ({
+                                  ...prev,
+                                  implantacao: prev.implantacao.map(i =>
+                                    i.id === item.id ? { ...i, descricao: e.target.value } : i
+                                  )
+                                }));
+                              }}
+                              placeholder="Descrição opcional"
+                            />
+                          </td>
+                          <td className="p-4 text-center">
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => {
+                                setCustosFonte(prev => ({
+                                  ...prev,
+                                  implantacao: prev.implantacao.filter(i => i.id !== item.id)
+                                }));
+                              }}
+                            >
+                              🗑️
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
