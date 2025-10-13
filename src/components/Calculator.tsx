@@ -932,13 +932,13 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-calc-table-header text-white">
-                        <th className="p-4 text-left font-semibold">Nome</th>
-                        <th className="p-4 text-left font-semibold">Custo Base</th>
-                        <th className="p-4 text-left font-semibold">Baixa %</th>
-                        <th className="p-4 text-left font-semibold">Média %</th>
-                        <th className="p-4 text-left font-semibold">Alta %</th>
-                        <th className="p-4 text-left font-semibold">Descrição</th>
-                        <th className="p-4 text-left font-semibold">Observações</th>
+                        <th className="p-4 text-left font-semibold min-w-[250px]">Nome</th>
+                        <th className="p-4 text-left font-semibold w-28">Custo Base</th>
+                        <th className="p-4 text-left font-semibold w-20">Baixa %</th>
+                        <th className="p-4 text-left font-semibold w-20">Média %</th>
+                        <th className="p-4 text-left font-semibold w-20">Alta %</th>
+                        <th className="p-4 text-left font-semibold min-w-[180px]">Descrição</th>
+                        <th className="p-4 text-left font-semibold w-32">Observações</th>
                         <th className="p-4 text-center font-semibold w-20">Ações</th>
                       </tr>
                     </thead>
@@ -1094,13 +1094,13 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-calc-table-header text-white">
-                        <th className="p-4 text-left font-semibold">Nome</th>
-                        <th className="p-4 text-left font-semibold">Valor Mensal</th>
-                        <th className="p-4 text-left font-semibold">Baixa %</th>
-                        <th className="p-4 text-left font-semibold">Média %</th>
-                        <th className="p-4 text-left font-semibold">Alta %</th>
-                        <th className="p-4 text-left font-semibold">Descrição</th>
-                        <th className="p-4 text-left font-semibold">Observações</th>
+                        <th className="p-4 text-left font-semibold min-w-[250px]">Nome</th>
+                        <th className="p-4 text-left font-semibold w-28">Valor Mensal</th>
+                        <th className="p-4 text-left font-semibold w-20">Baixa %</th>
+                        <th className="p-4 text-left font-semibold w-20">Média %</th>
+                        <th className="p-4 text-left font-semibold w-20">Alta %</th>
+                        <th className="p-4 text-left font-semibold min-w-[180px]">Descrição</th>
+                        <th className="p-4 text-left font-semibold w-32">Observações</th>
                         <th className="p-4 text-center font-semibold w-20">Ações</th>
                       </tr>
                     </thead>
