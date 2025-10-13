@@ -50,6 +50,15 @@ interface Adicional {
   precoCusto: number;
 }
 
+interface EntregavelComercial {
+  id: number;
+  nome: string;
+  quantidade: number;
+  precoVenda: number;
+  custosRelacionados: number[]; // IDs dos custos da aba custos-fonte
+  observacoes: string;
+}
+
 interface CustosFonte {
   implantacao: Array<{
     id: number;
@@ -255,6 +264,25 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
   const canEditObservacoes = true; // Permissões globais - todos podem editar
 
   const [isSaving, setIsSaving] = useState(false);
+
+  const [entregaveisComerciais, setEntregaveisComerciais] = useState<EntregavelComercial[]>([
+    {
+      id: 1,
+      nome: 'Agente Pré-atendimento IA',
+      quantidade: 1,
+      precoVenda: 3800,
+      custosRelacionados: [1, 2],
+      observacoes: 'Base existente, foco qualificação'
+    },
+    {
+      id: 2,
+      nome: 'Sistema Lembretes + Reengajamento',
+      quantidade: 1,
+      precoVenda: 5500,
+      custosRelacionados: [1, 3],
+      observacoes: 'Fluxos automatizados integrados'
+    }
+  ]);
 
   const [adicionais, setAdicionais] = useState<Adicional[]>([
     { 
@@ -480,10 +508,6 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
     }
   }, [projectId, adicionais]);
 
-  const handleSaveTemplate = useCallback(() => {
-    handleSaveAll();
-  }, [handleSaveAll]);
-
   const complexityStyles: Record<ComplexityLevel, string> = {
     low: 'bg-calc-complexity-low text-white',
     medium: 'bg-calc-complexity-medium text-white',
@@ -508,7 +532,6 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
         <div className="flex bg-gray-50 border-b-2 border-gray-200">
           {[
             { id: 'comercial', label: '💰 Precificação Comercial' },
-            { id: 'custos', label: '📊 Custos Internos' },
             { id: 'custos-fonte', label: '🏗️ Custos Fonte' },
             { id: 'adicionais', label: '➕ Adicionais Recorrência' },
             { id: 'simulacoes', label: '🎯 Simulações' }
@@ -533,217 +556,216 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
             <div className="space-y-8">
               <div className="flex justify-between items-center">
                 <h2 className="text-3xl font-bold text-gray-800">💰 Precificação Comercial</h2>
-                <Button onClick={handleSaveTemplate} className="gap-2">
-                  <Save className="h-4 w-4" />
-                  Salvar Template
+                <Button
+                  onClick={() => {
+                    const newId = Math.max(0, ...entregaveisComerciais.map(e => e.id)) + 1;
+                    setEntregaveisComerciais(prev => [
+                      ...prev,
+                      {
+                        id: newId,
+                        nome: 'Novo Entregável',
+                        quantidade: 1,
+                        precoVenda: 0,
+                        custosRelacionados: [],
+                        observacoes: ''
+                      }
+                    ]);
+                  }}
+                  className="gap-2"
+                >
+                  ➕ Adicionar Entregável
                 </Button>
               </div>
               
-              {/* Implantação Table */}
+              {/* Entregáveis Table */}
               <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                <h3 className="text-xl font-bold p-4 bg-gray-100 border-b">🚀 IMPLANTAÇÃO</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-calc-table-header text-white">
-                        <th className="p-4 text-left font-semibold">Componente</th>
-                        <th className="p-4 text-left font-semibold">Complexidade</th>
-                        <th className="p-4 text-left font-semibold w-64">Observações</th>
-                        <th className="p-4 text-left font-semibold">Preço Venda (R$)</th>
-                        <th className="p-4 text-left font-semibold">Custo Interno (R$)</th>
-                        <th className="p-4 text-left font-semibold">Lucro Bruto (R$)</th>
-                        <th className="p-4 text-left font-semibold">Margem (%)</th>
+                        <th className="p-4 text-left font-semibold min-w-[200px]">Nome</th>
+                        <th className="p-4 text-left font-semibold w-28">Quantidade</th>
+                        <th className="p-4 text-left font-semibold min-w-[250px]">Custos Correlacionados</th>
+                        <th className="p-4 text-left font-semibold min-w-[200px]">Observações</th>
+                        <th className="p-4 text-left font-semibold w-32">Preço Venda (R$)</th>
+                        <th className="p-4 text-left font-semibold w-32">Custo Interno (R$)</th>
+                        <th className="p-4 text-left font-semibold w-32">Margem (%)</th>
+                        <th className="p-4 text-center font-semibold w-20">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {IMPLANTACAO_ITEMS.map(item => {
-                        const preco = data.implantacao[item.key];
-                        const custo = getAdjustedImplantacaoCost(item.key);
-                        const margem = calculateMargin(preco, custo);
-                        const complexidadeAtual = implantacaoComplexities[item.key];
-                        const observacao = implantacaoObservations[item.key];
+                      {entregaveisComerciais.map((entregavel) => {
+                        // Calcular custo interno baseado nos custos selecionados
+                        const custoInterno = entregavel.custosRelacionados.reduce((sum, custoId) => {
+                          const custoItem = custosFonte.implantacao.find(c => c.id === custoId);
+                          if (custoItem) {
+                            // Usar multiplicador "media" por padrão
+                            const custoAjustado = custoItem.valor * (1 + custoItem.multiplicadores.media / 100);
+                            return sum + custoAjustado;
+                          }
+                          return sum;
+                        }, 0) * entregavel.quantidade;
+
+                        const margem = calculateMargin(entregavel.precoVenda, custoInterno);
+                        
+                        // Contar quantas vezes cada custo é usado
+                        const custosUsados = new Map<number, number>();
+                        entregaveisComerciais.forEach(e => {
+                          e.custosRelacionados.forEach(id => {
+                            custosUsados.set(id, (custosUsados.get(id) || 0) + 1);
+                          });
+                        });
+
+                        // Gerar lista de custos selecionados com descrições
+                        const listaCustos = entregavel.custosRelacionados
+                          .map(id => {
+                            const custo = custosFonte.implantacao.find(c => c.id === id);
+                            return custo ? `${custo.nome} (${custo.descricao})` : '';
+                          })
+                          .filter(Boolean)
+                          .join('; ');
+
                         return (
-                          <tr key={item.key} className="hover:bg-gray-50 transition-colors border-b">
-                            <td className="p-4 font-medium">{item.name}</td>
+                          <tr key={entregavel.id} className="hover:bg-gray-50 border-b">
+                            <td className="p-4">
+                              <input
+                                type="text"
+                                className="w-full px-3 py-2 border-2 border-gray-300 rounded-md font-medium focus:outline-none focus:border-blue-500"
+                                value={entregavel.nome}
+                                onChange={(e) => {
+                                  setEntregaveisComerciais(prev => prev.map(item =>
+                                    item.id === entregavel.id ? { ...item, nome: e.target.value } : item
+                                  ));
+                                }}
+                                placeholder="Nome do entregável"
+                              />
+                            </td>
+                            <td className="p-4">
+                              <InputCell
+                                value={entregavel.quantidade}
+                                onChange={(value) => {
+                                  setEntregaveisComerciais(prev => prev.map(item =>
+                                    item.id === entregavel.id ? { ...item, quantidade: value } : item
+                                  ));
+                                }}
+                              />
+                            </td>
                             <td className="p-4">
                               <Select
-                                value={complexidadeAtual}
-                                onValueChange={(value: ComplexityLevel) => {
-                                  setImplantacaoComplexities(prev => ({
-                                    ...prev,
-                                    [item.key]: value
-                                  }));
+                                value=""
+                                onValueChange={(value) => {
+                                  const custoId = parseInt(value);
+                                  if (!entregavel.custosRelacionados.includes(custoId)) {
+                                    setEntregaveisComerciais(prev => prev.map(item =>
+                                      item.id === entregavel.id 
+                                        ? { ...item, custosRelacionados: [...item.custosRelacionados, custoId] }
+                                        : item
+                                    ));
+                                  }
                                 }}
                               >
-                                <SelectTrigger className={`w-full font-semibold text-sm capitalize ${complexityStyles[complexidadeAtual]}`}>
-                                  <SelectValue />
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Adicionar custo..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="low" className="font-semibold">Baixa</SelectItem>
-                                  <SelectItem value="medium" className="font-semibold">Média</SelectItem>
-                                  <SelectItem value="high" className="font-semibold">Alta</SelectItem>
-                                  <SelectItem value="removed" className="font-semibold">Remover</SelectItem>
+                                  {custosFonte.implantacao.map(custo => {
+                                    const contador = custosUsados.get(custo.id) || 0;
+                                    return (
+                                      <SelectItem key={custo.id} value={custo.id.toString()}>
+                                        {custo.nome} {contador > 0 ? `(usado ${contador}x)` : ''}
+                                      </SelectItem>
+                                    );
+                                  })}
                                 </SelectContent>
                               </Select>
-                            </td>
-                            <td className="p-4 text-sm text-gray-600">
-                              <div className="flex gap-2 items-start">
-                                <div className="flex-1 min-w-0">
-                                  {canEditObservacoes ? (
-                                    <Textarea
-                                      value={observacao}
-                                      onChange={(event) =>
-                                        setImplantacaoObservations(prev => ({
-                                          ...prev,
-                                          [item.key]: event.target.value,
-                                        }))
-                                      }
-                                      placeholder="Adicione observações relevantes"
-                                      className="min-h-[60px]"
-                                    />
-                                  ) : (
-                                    <p className="whitespace-pre-wrap line-clamp-3">{observacao || '—'}</p>
-                                  )}
+                              {entregavel.custosRelacionados.length > 0 && (
+                                <div className="mt-2 flex flex-wrap gap-1">
+                                  {entregavel.custosRelacionados.map(custoId => {
+                                    const custo = custosFonte.implantacao.find(c => c.id === custoId);
+                                    return custo ? (
+                                      <span
+                                        key={custoId}
+                                        className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs"
+                                      >
+                                        {custo.nome}
+                                        <button
+                                          onClick={() => {
+                                            setEntregaveisComerciais(prev => prev.map(item =>
+                                              item.id === entregavel.id
+                                                ? { 
+                                                    ...item, 
+                                                    custosRelacionados: item.custosRelacionados.filter(id => id !== custoId)
+                                                  }
+                                                : item
+                                            ));
+                                          }}
+                                          className="text-blue-900 hover:text-red-600"
+                                        >
+                                          ×
+                                        </button>
+                                      </span>
+                                    ) : null;
+                                  })}
                                 </div>
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="flex-shrink-0">
-                                      <Maximize2 className="h-4 w-4" />
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent className="max-w-2xl">
-                                    <DialogHeader>
-                                      <DialogTitle>{item.name} - Observações</DialogTitle>
-                                    </DialogHeader>
-                                    <div className="mt-4">
-                                      {canEditObservacoes ? (
-                                        <Textarea
-                                          value={observacao}
-                                          onChange={(event) =>
-                                            setImplantacaoObservations(prev => ({
-                                              ...prev,
-                                              [item.key]: event.target.value,
-                                            }))
-                                          }
-                                          placeholder="Adicione observações relevantes"
-                                          className="min-h-[200px]"
-                                        />
-                                      ) : (
-                                        <p className="whitespace-pre-wrap text-base">{observacao || 'Sem observações'}</p>
-                                      )}
+                              )}
+                            </td>
+                            <td className="p-4">
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="outline" size="sm" className="w-full">
+                                    {entregavel.observacoes || listaCustos ? '📝 Ver' : '➕ Adicionar'}
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-2xl">
+                                  <DialogHeader>
+                                    <DialogTitle>Observações - {entregavel.nome}</DialogTitle>
+                                  </DialogHeader>
+                                  <div className="space-y-4">
+                                    <div>
+                                      <label className="text-sm font-semibold text-gray-700">Custos Selecionados:</label>
+                                      <p className="text-sm text-gray-600 mt-1">{listaCustos || 'Nenhum custo selecionado'}</p>
                                     </div>
-                                  </DialogContent>
-                                </Dialog>
-                              </div>
+                                    <div>
+                                      <label className="text-sm font-semibold text-gray-700">Observações Adicionais:</label>
+                                      <Textarea
+                                        value={entregavel.observacoes}
+                                        onChange={(e) => {
+                                          setEntregaveisComerciais(prev => prev.map(item =>
+                                            item.id === entregavel.id ? { ...item, observacoes: e.target.value } : item
+                                          ));
+                                        }}
+                                        placeholder="Adicione observações adicionais..."
+                                        className="min-h-[150px] mt-2"
+                                      />
+                                    </div>
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
                             </td>
                             <td className="p-4">
                               <InputCell
-                                value={preco}
-                                onChange={(value) => updateValue('implantacao', item.key, value)}
+                                value={entregavel.precoVenda}
+                                onChange={(value) => {
+                                  setEntregaveisComerciais(prev => prev.map(item =>
+                                    item.id === entregavel.id ? { ...item, precoVenda: value } : item
+                                  ));
+                                }}
                               />
                             </td>
-                            <td className="p-4 text-gray-600">{formatCurrency(custo)}</td>
-                            <td className="p-4">
-                              <MarginIndicator value={preco - custo} type="currency" margin={margem} />
-                            </td>
+                            <td className="p-4 text-gray-600">{formatCurrency(custoInterno)}</td>
                             <td className="p-4">
                               <MarginIndicator value={margem} type="percentage" margin={margem} />
                             </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Recorrência Table */}
-              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                <h3 className="text-xl font-bold p-4 bg-gray-100 border-b">🔄 RECORRÊNCIA MENSAL</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-calc-table-header text-white">
-                        <th className="p-4 text-left font-semibold">Item</th>
-                        <th className="p-4 text-left font-semibold">Valor Mensal (R$)</th>
-                        <th className="p-4 text-left font-semibold">Custo Interno (R$)</th>
-                        <th className="p-4 text-left font-semibold">Lucro Bruto (R$)</th>
-                        <th className="p-4 text-left font-semibold">Margem (%)</th>
-                        <th className="p-4 text-left font-semibold">Observações</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {RECORRENCIA_ITEMS.map(item => {
-                        const preco = data.recorrencia[item.key];
-                        const custo = custosCalculados.recorrencia[item.key];
-                        const lucro = preco - custo;
-                        const margem = calculateMargin(preco, custo);
-                        const observacao = recorrenciaObservations[item.key];
-                        return (
-                          <tr key={item.key} className="hover:bg-gray-50 transition-colors border-b">
-                            <td className="p-4 font-medium">{item.name}</td>
-                            <td className="p-4">
-                              <InputCell
-                                value={preco}
-                                onChange={(value) => updateValue('recorrencia', item.key, value)}
-                              />
-                            </td>
-                            <td className="p-4 text-gray-600">{formatCurrency(custo)}</td>
-                            <td className="p-4">
-                              <MarginIndicator value={lucro} type="currency" margin={margem} />
-                            </td>
-                            <td className="p-4">
-                              <MarginIndicator value={margem} type="percentage" margin={margem} />
-                            </td>
-                            <td className="p-4 text-sm text-gray-600">
-                              <div className="flex gap-2 items-start">
-                                <div className="flex-1 min-w-0">
-                                  {canEditObservacoes ? (
-                                    <Textarea
-                                      value={observacao}
-                                      onChange={(event) =>
-                                        setRecorrenciaObservations(prev => ({
-                                          ...prev,
-                                          [item.key]: event.target.value,
-                                        }))
-                                      }
-                                      placeholder="Adicione observações relevantes"
-                                      className="min-h-[60px]"
-                                    />
-                                  ) : (
-                                    <p className="whitespace-pre-wrap line-clamp-3">{observacao || '—'}</p>
-                                  )}
-                                </div>
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="flex-shrink-0">
-                                      <Maximize2 className="h-4 w-4" />
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent className="max-w-2xl">
-                                    <DialogHeader>
-                                      <DialogTitle>{item.name} - Observações</DialogTitle>
-                                    </DialogHeader>
-                                    <div className="mt-4">
-                                      {canEditObservacoes ? (
-                                        <Textarea
-                                          value={observacao}
-                                          onChange={(event) =>
-                                            setRecorrenciaObservations(prev => ({
-                                              ...prev,
-                                              [item.key]: event.target.value,
-                                            }))
-                                          }
-                                          placeholder="Adicione observações relevantes"
-                                          className="min-h-[200px]"
-                                        />
-                                      ) : (
-                                        <p className="whitespace-pre-wrap text-base">{observacao || 'Sem observações'}</p>
-                                      )}
-                                    </div>
-                                  </DialogContent>
-                                </Dialog>
-                              </div>
+                            <td className="p-4 text-center">
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => {
+                                  setEntregaveisComerciais(prev => prev.filter(item => item.id !== entregavel.id));
+                                }}
+                              >
+                                🗑️
+                              </Button>
                             </td>
                           </tr>
                         );
@@ -756,24 +778,89 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
               {/* Summary */}
               <SummaryCard
                 data={{
-                  totalImplantacao: totals.implantacao,
+                  totalImplantacao: entregaveisComerciais.reduce((sum, e) => sum + e.precoVenda, 0),
                   totalRecorrencia: totals.recorrencia,
-                  margemImplantacao: margins.implantacao,
+                  margemImplantacao: calculateMargin(
+                    entregaveisComerciais.reduce((sum, e) => sum + e.precoVenda, 0),
+                    entregaveisComerciais.reduce((sum, e) => {
+                      const custo = e.custosRelacionados.reduce((cSum, custoId) => {
+                        const custoItem = custosFonte.implantacao.find(c => c.id === custoId);
+                        if (custoItem) {
+                          const custoAjustado = custoItem.valor * (1 + custoItem.multiplicadores.media / 100);
+                          return cSum + custoAjustado;
+                        }
+                        return cSum;
+                      }, 0) * e.quantidade;
+                      return sum + custo;
+                    }, 0)
+                  ),
                   margemRecorrencia: margins.recorrencia
                 }}
                 formatCurrency={formatCurrency}
               />
 
               <div className={`p-6 rounded-xl text-center text-xl font-bold text-white ${
-                margins.implantacao >= 60 && margins.recorrencia >= 45 
+                calculateMargin(
+                  entregaveisComerciais.reduce((sum, e) => sum + e.precoVenda, 0),
+                  entregaveisComerciais.reduce((sum, e) => {
+                    const custo = e.custosRelacionados.reduce((cSum, custoId) => {
+                      const custoItem = custosFonte.implantacao.find(c => c.id === custoId);
+                      if (custoItem) {
+                        const custoAjustado = custoItem.valor * (1 + custoItem.multiplicadores.media / 100);
+                        return cSum + custoAjustado;
+                      }
+                      return cSum;
+                    }, 0) * e.quantidade;
+                    return sum + custo;
+                  }, 0)
+                ) >= 60 && margins.recorrencia >= 45 
                   ? 'bg-calc-margin-excellent' 
-                  : margins.implantacao >= 45 && margins.recorrencia >= 35
+                  : calculateMargin(
+                      entregaveisComerciais.reduce((sum, e) => sum + e.precoVenda, 0),
+                      entregaveisComerciais.reduce((sum, e) => {
+                        const custo = e.custosRelacionados.reduce((cSum, custoId) => {
+                          const custoItem = custosFonte.implantacao.find(c => c.id === custoId);
+                          if (custoItem) {
+                            const custoAjustado = custoItem.valor * (1 + custoItem.multiplicadores.media / 100);
+                            return cSum + custoAjustado;
+                          }
+                          return cSum;
+                        }, 0) * e.quantidade;
+                        return sum + custo;
+                      }, 0)
+                    ) >= 45 && margins.recorrencia >= 35
                   ? 'bg-calc-margin-good'
                   : 'bg-calc-margin-poor'
               }`}>
-                {margins.implantacao >= 60 && margins.recorrencia >= 45
+                {calculateMargin(
+                  entregaveisComerciais.reduce((sum, e) => sum + e.precoVenda, 0),
+                  entregaveisComerciais.reduce((sum, e) => {
+                    const custo = e.custosRelacionados.reduce((cSum, custoId) => {
+                      const custoItem = custosFonte.implantacao.find(c => c.id === custoId);
+                      if (custoItem) {
+                        const custoAjustado = custoItem.valor * (1 + custoItem.multiplicadores.media / 100);
+                        return cSum + custoAjustado;
+                      }
+                      return cSum;
+                    }, 0) * e.quantidade;
+                    return sum + custo;
+                  }, 0)
+                ) >= 60 && margins.recorrencia >= 45
                   ? '🎯 VIABILIDADE EXCELENTE - Margens dentro do padrão ideal!'
-                  : margins.implantacao >= 45 && margins.recorrencia >= 35
+                  : calculateMargin(
+                      entregaveisComerciais.reduce((sum, e) => sum + e.precoVenda, 0),
+                      entregaveisComerciais.reduce((sum, e) => {
+                        const custo = e.custosRelacionados.reduce((cSum, custoId) => {
+                          const custoItem = custosFonte.implantacao.find(c => c.id === custoId);
+                          if (custoItem) {
+                            const custoAjustado = custoItem.valor * (1 + custoItem.multiplicadores.media / 100);
+                            return cSum + custoAjustado;
+                          }
+                          return cSum;
+                        }, 0) * e.quantidade;
+                        return sum + custo;
+                      }, 0)
+                    ) >= 45 && margins.recorrencia >= 35
                   ? '✅ VIABILIDADE BOA - Margens aceitáveis!'
                   : '⚠️ VIABILIDADE CRÍTICA - Revisar preços!'
                 }
@@ -781,114 +868,6 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
             </div>
           )}
 
-          {activeTab === 'custos' && (
-            <div className="space-y-8">
-              <h2 className="text-3xl font-bold text-gray-800">📊 Custos Internos</h2>
-
-              {/* Custos Implantação */}
-              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                <h3 className="text-xl font-bold p-4 bg-gray-100 border-b">💼 Custos de Implantação (1,5 mês)</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-calc-table-header text-white">
-                        <th className="p-4 text-left font-semibold">Recurso</th>
-                        <th className="p-4 text-left font-semibold">Custo/Mês</th>
-                        <th className="p-4 text-left font-semibold">Total 1,5 Meses</th>
-                        <th className="p-4 text-left font-semibold">Alocação por Entregável</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">Desenvolvedor Pleno</td>
-                        <td className="p-4">R$ 2.200</td>
-                        <td className="p-4">R$ 3.300</td>
-                        <td className="p-4">40% do custo total</td>
-                      </tr>
-                      <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">Desenvolvedor Júnior</td>
-                        <td className="p-4">R$ 1.500</td>
-                        <td className="p-4">R$ 2.250</td>
-                        <td className="p-4">25% do custo total</td>
-                      </tr>
-                      <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">Analista de BI</td>
-                        <td className="p-4">R$ 1.800</td>
-                        <td className="p-4">R$ 2.700</td>
-                        <td className="p-4">30% do custo total</td>
-                      </tr>
-                      <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">Infraestrutura Dev</td>
-                        <td className="p-4">R$ 150</td>
-                        <td className="p-4">R$ 225</td>
-                        <td className="p-4">5% do custo total</td>
-                      </tr>
-                      <tr className="bg-gray-100 font-bold">
-                        <td className="p-4">TOTAL</td>
-                        <td className="p-4">R$ 5.650</td>
-                        <td className="p-4">R$ 8.475</td>
-                        <td className="p-4">100%</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Custos Recorrência */}
-              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                <h3 className="text-xl font-bold p-4 bg-gray-100 border-b">🔄 Custos de Recorrência Mensal</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-calc-table-header text-white">
-                        <th className="p-4 text-left font-semibold">Recurso</th>
-                        <th className="p-4 text-left font-semibold">Custo Mensal</th>
-                        <th className="p-4 text-left font-semibold">Percentual</th>
-                        <th className="p-4 text-left font-semibold">Descrição</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">Manutenção (6h Dev Pleno)</td>
-                        <td className="p-4">R$ 750</td>
-                        <td className="p-4">61%</td>
-                        <td className="p-4">Otimizações e melhorias</td>
-                      </tr>
-                      <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">Infraestrutura Real</td>
-                        <td className="p-4">R$ 280</td>
-                        <td className="p-4">23%</td>
-                        <td className="p-4">Servidores, APIs, processamento IA</td>
-                      </tr>
-                      <tr className="hover:bg-gray-50 border-b">
-                        <td className="p-4 font-medium">Overhead Analítico</td>
-                        <td className="p-4">R$ 200</td>
-                        <td className="p-4">16%</td>
-                        <td className="p-4">Análise de performance, relatórios</td>
-                      </tr>
-                      <tr className="bg-gray-100 font-bold">
-                        <td className="p-4">TOTAL</td>
-                        <td className="p-4">R$ 1.230</td>
-                        <td className="p-4">100%</td>
-                        <td className="p-4">Custo base operacional</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <SummaryCard
-                data={{
-                  custoImplantacao: totals.custoImplantacao,
-                  custoRecorrencia: totals.custoRecorrencia,
-                  lucroImplantacao: totals.implantacao - totals.custoImplantacao,
-                  lucroRecorrencia: totals.recorrencia - totals.custoRecorrencia
-                }}
-                formatCurrency={formatCurrency}
-                type="costs"
-              />
-            </div>
-          )}
 
           {activeTab === 'custos-fonte' && (
             <div className="space-y-8">
