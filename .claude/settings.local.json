@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where code)",
+      "Read(//c/Users/mathe/AppData/Roaming/Code/User/**)",
+      "Bash(dir \"%APPDATA%\\Code\\User\" /b)",
+      "Bash(supabase db dump:*)",
+      "Bash(findstr:*)",
+      "Bash(curl -X GET \"https://kjuouwqsjanwnfhaecoo.supabase.co/rest/v1/\" -H \"apikey: sb_publishable_NQVkNsfmxWn6VCnGdENOEA_VbN81vby\" -H \"Authorization: Bearer sb_publishable_NQVkNsfmxWn6VCnGdENOEA_VbN81vby\")",
+      "Bash(dir:*)",
+      "Bash(supabase db push:*)",
+      "Bash(npx tsx:*)",
+      "Bash(node:*)",
+      "Bash(taskkill:*)",
+      "Bash(npm cache clean:*)",
+      "Bash(npm install)",
+      "Bash(npm run dev)",
+      "Bash(timeout:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
