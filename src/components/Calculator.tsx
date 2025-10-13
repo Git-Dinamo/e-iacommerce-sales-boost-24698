@@ -2,12 +2,13 @@ import { useState, useCallback } from 'react';
 import { InputCell } from './InputCell';
 import { MarginIndicator } from './MarginIndicator';
 import { SummaryCard } from './SummaryCard';
-import { Save, Maximize2 } from 'lucide-react';
+import { Save, Maximize2, Loader2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CalculatorData {
   implantacao: {
@@ -253,13 +254,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
 
   const canEditObservacoes = true; // Permissões globais - todos podem editar
 
-  const handleSaveTemplate = useCallback(() => {
-    // Aqui futuramente salvar no banco de dados
-    toast({
-      title: "Template salvo com sucesso!",
-      description: "As alterações no template da calculadora foram salvas.",
-    });
-  }, []);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [adicionais, setAdicionais] = useState<Adicional[]>([
     { 
@@ -434,6 +429,60 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
     implantacao: calculateMargin(totals.implantacao, totals.custoImplantacao),
     recorrencia: calculateMargin(totals.recorrencia, totals.custoRecorrencia)
   };
+
+  const handleSaveAll = useCallback(async () => {
+    setIsSaving(true);
+    try {
+      // Busca se já existe um registro para este projeto
+      const { data: existing } = await supabase
+        .from('calculator_data')
+        .select('id')
+        .eq('project_id', projectId)
+        .maybeSingle();
+
+      if (existing) {
+        // Atualiza o registro existente
+        const { error } = await supabase
+          .from('calculator_data')
+          .update({
+            addons: adicionais as any,
+            updated_at: new Date().toISOString()
+          })
+          .eq('project_id', projectId);
+
+        if (error) throw error;
+      } else {
+        // Cria novo registro
+        const { error } = await supabase
+          .from('calculator_data')
+          .insert([{
+            project_id: projectId,
+            addons: adicionais as any,
+            updated_at: new Date().toISOString()
+          }]);
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: "✅ Alterações salvas!",
+        description: "Todos os dados foram salvos com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro ao salvar:', error);
+      toast({
+        title: "❌ Erro ao salvar",
+        description: "Não foi possível salvar as alterações. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [projectId, adicionais]);
+
+  const handleSaveTemplate = useCallback(() => {
+    handleSaveAll();
+  }, [handleSaveAll]);
 
   const complexityStyles: Record<ComplexityLevel, string> = {
     low: 'bg-calc-complexity-low text-white',
@@ -1543,7 +1592,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                           <div className="font-semibold text-green-700">Adicionais</div>
                           <div className="text-lg font-bold text-green-600">{formatCurrency(adicionaisTotals.totalVenda)}</div>
                         </div>
-                      </div>
+                       </div>
                     </div>
                   </div>
                 );
@@ -1553,6 +1602,26 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
         </div>
         )}
       </div>
+
+      {/* Botão flutuante global de salvar */}
+      <Button
+        onClick={handleSaveAll}
+        disabled={isSaving}
+        className="fixed bottom-8 right-8 h-14 px-6 gap-3 shadow-2xl text-lg z-50"
+        size="lg"
+      >
+        {isSaving ? (
+          <>
+            <Loader2 className="h-5 w-5 animate-spin" />
+            Salvando...
+          </>
+        ) : (
+          <>
+            <Save className="h-5 w-5" />
+            Salvar Alterações
+          </>
+        )}
+      </Button>
     </div>
   );
 };
