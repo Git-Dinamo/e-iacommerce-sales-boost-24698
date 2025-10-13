@@ -55,6 +55,7 @@ interface CustosFonte {
     nome: string;
     valor: number;
     descricao: string;
+    observacao: string;
     multiplicadores: {
       baixa: number;
       media: number;
@@ -66,6 +67,7 @@ interface CustosFonte {
     nome: string;
     valor: number;
     descricao: string;
+    observacao: string;
     multiplicadores: {
       baixa: number;
       media: number;
@@ -169,6 +171,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
         nome: 'Setup Inicial', 
         valor: 800, 
         descricao: 'Configuração inicial do ambiente',
+        observacao: '',
         multiplicadores: { baixa: -30, media: 0, alta: 50 }
       },
       { 
@@ -176,6 +179,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
         nome: 'Configuração Servidor', 
         valor: 500, 
         descricao: 'Deploy e configuração de infraestrutura',
+        observacao: '',
         multiplicadores: { baixa: -30, media: 0, alta: 50 }
       },
       { 
@@ -183,6 +187,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
         nome: 'Migração de Dados', 
         valor: 1200, 
         descricao: 'Importação e estruturação de dados',
+        observacao: '',
         multiplicadores: { baixa: -30, media: 0, alta: 50 }
       },
       { 
@@ -190,6 +195,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
         nome: 'Treinamento Equipe', 
         valor: 600, 
         descricao: 'Capacitação e documentação',
+        observacao: '',
         multiplicadores: { baixa: -30, media: 0, alta: 50 }
       }
     ],
@@ -199,6 +205,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
         nome: 'Servidor VPS', 
         valor: 100, 
         descricao: '2-8GB RAM',
+        observacao: '',
         multiplicadores: { baixa: -30, media: 0, alta: 50 }
       },
       { 
@@ -206,6 +213,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
         nome: 'Banco de Dados', 
         valor: 80, 
         descricao: 'PostgreSQL/MySQL',
+        observacao: '',
         multiplicadores: { baixa: -30, media: 0, alta: 50 }
       },
       { 
@@ -213,6 +221,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
         nome: 'APIs Externas', 
         valor: 70, 
         descricao: 'Integrações',
+        observacao: '',
         multiplicadores: { baixa: -30, media: 0, alta: 50 }
       },
       { 
@@ -220,6 +229,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
         nome: 'Serviços IA (OpenAI)', 
         valor: 150, 
         descricao: 'Conforme uso',
+        observacao: '',
         multiplicadores: { baixa: -30, media: 0, alta: 50 }
       },
       { 
@@ -227,6 +237,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
         nome: 'Monitoramento', 
         valor: 60, 
         descricao: 'Logs e métricas',
+        observacao: '',
         multiplicadores: { baixa: -30, media: 0, alta: 50 }
       },
       { 
@@ -234,6 +245,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
         nome: 'CDN e Storage', 
         valor: 30, 
         descricao: 'Arquivos e cache',
+        observacao: '',
         multiplicadores: { baixa: -30, media: 0, alta: 50 }
       }
     ]
@@ -856,6 +868,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                             nome: 'Novo Custo', 
                             valor: 0, 
                             descricao: '',
+                            observacao: '',
                             multiplicadores: { baixa: -30, media: 0, alta: 50 }
                           }
                         ]
@@ -876,6 +889,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                         <th className="p-4 text-left font-semibold">Média %</th>
                         <th className="p-4 text-left font-semibold">Alta %</th>
                         <th className="p-4 text-left font-semibold">Descrição</th>
+                        <th className="p-4 text-left font-semibold">Observações</th>
                         <th className="p-4 text-center font-semibold w-20">Ações</th>
                       </tr>
                     </thead>
@@ -941,8 +955,35 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                                   )
                                 }));
                               }}
-                              placeholder="Descrição opcional"
+                              placeholder="Descrição curta"
                             />
+                          </td>
+                          <td className="p-4">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="outline" size="sm" className="w-full">
+                                  {item.observacao ? '📝 Editar' : '➕ Adicionar'}
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                  <DialogTitle>Observações - {item.nome}</DialogTitle>
+                                </DialogHeader>
+                                <Textarea
+                                  value={item.observacao}
+                                  onChange={(e) => {
+                                    setCustosFonte(prev => ({
+                                      ...prev,
+                                      implantacao: prev.implantacao.map(i =>
+                                        i.id === item.id ? { ...i, observacao: e.target.value } : i
+                                      )
+                                    }));
+                                  }}
+                                  placeholder="Adicione observações detalhadas sobre este custo..."
+                                  className="min-h-[200px]"
+                                />
+                              </DialogContent>
+                            </Dialog>
                           </td>
                           <td className="p-4 text-center">
                             <Button
@@ -989,6 +1030,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                             nome: 'Novo Custo', 
                             valor: 0, 
                             descricao: '',
+                            observacao: '',
                             multiplicadores: { baixa: -30, media: 0, alta: 50 }
                           }
                         ]
@@ -1009,6 +1051,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                         <th className="p-4 text-left font-semibold">Média %</th>
                         <th className="p-4 text-left font-semibold">Alta %</th>
                         <th className="p-4 text-left font-semibold">Descrição</th>
+                        <th className="p-4 text-left font-semibold">Observações</th>
                         <th className="p-4 text-center font-semibold w-20">Ações</th>
                       </tr>
                     </thead>
@@ -1074,8 +1117,35 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                                   )
                                 }));
                               }}
-                              placeholder="Descrição opcional"
+                              placeholder="Descrição curta"
                             />
+                          </td>
+                          <td className="p-4">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="outline" size="sm" className="w-full">
+                                  {item.observacao ? '📝 Editar' : '➕ Adicionar'}
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                  <DialogTitle>Observações - {item.nome}</DialogTitle>
+                                </DialogHeader>
+                                <Textarea
+                                  value={item.observacao}
+                                  onChange={(e) => {
+                                    setCustosFonte(prev => ({
+                                      ...prev,
+                                      mensaisFixos: prev.mensaisFixos.map(i =>
+                                        i.id === item.id ? { ...i, observacao: e.target.value } : i
+                                      )
+                                    }));
+                                  }}
+                                  placeholder="Adicione observações detalhadas sobre este custo..."
+                                  className="min-h-[200px]"
+                                />
+                              </DialogContent>
+                            </Dialog>
                           </td>
                           <td className="p-4 text-center">
                             <Button
