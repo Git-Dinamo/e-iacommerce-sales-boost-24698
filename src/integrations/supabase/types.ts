@@ -203,6 +203,7 @@ export type Database = {
           custo_instalacao: number | null
           custo_mensalidade: number | null
           duracao_meses: number | null
+          entregaveis_comerciais: Json | null
           fonte_consulta_primeira_vez: number | null
           fonte_consulta_retorno: number | null
           fonte_consulta_simples: number | null
@@ -231,6 +232,7 @@ export type Database = {
           custo_instalacao?: number | null
           custo_mensalidade?: number | null
           duracao_meses?: number | null
+          entregaveis_comerciais?: Json | null
           fonte_consulta_primeira_vez?: number | null
           fonte_consulta_retorno?: number | null
           fonte_consulta_simples?: number | null
@@ -259,6 +261,7 @@ export type Database = {
           custo_instalacao?: number | null
           custo_mensalidade?: number | null
           duracao_meses?: number | null
+          entregaveis_comerciais?: Json | null
           fonte_consulta_primeira_vez?: number | null
           fonte_consulta_retorno?: number | null
           fonte_consulta_simples?: number | null

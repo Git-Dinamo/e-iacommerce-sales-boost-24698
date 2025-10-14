@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { InputCell } from './InputCell';
 import { MarginIndicator } from './MarginIndicator';
 import { SummaryCard } from './SummaryCard';
@@ -527,6 +527,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
           .from('calculator_data')
           .update({
             addons: adicionais as any,
+            entregaveis_comerciais: entregaveisComerciais as any,
             updated_at: new Date().toISOString()
           })
           .eq('project_id', projectId);
@@ -539,6 +540,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
           .insert([{
             project_id: projectId,
             addons: adicionais as any,
+            entregaveis_comerciais: entregaveisComerciais as any,
             updated_at: new Date().toISOString()
           }]);
 
@@ -559,7 +561,35 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
     } finally {
       setIsSaving(false);
     }
-  }, [projectId, adicionais]);
+  }, [projectId, adicionais, entregaveisComerciais]);
+
+  // Carregar dados salvos ao montar o componente
+  useEffect(() => {
+    const loadSavedData = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('calculator_data')
+          .select('addons, entregaveis_comerciais')
+          .eq('project_id', projectId)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (data) {
+          if (data.addons) {
+            setAdicionais(data.addons as unknown as Adicional[]);
+          }
+          if (data.entregaveis_comerciais) {
+            setEntregaveisComerciais(data.entregaveis_comerciais as unknown as EntregavelComercial[]);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+      }
+    };
+
+    loadSavedData();
+  }, [projectId]);
 
   const complexityStyles: Record<ComplexityLevel, string> = {
     low: 'bg-calc-complexity-low text-white',
