@@ -528,6 +528,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
           .update({
             addons: adicionais as any,
             entregaveis_comerciais: entregaveisComerciais as any,
+            custos_fonte: custosFonte as any,
             updated_at: new Date().toISOString()
           })
           .eq('project_id', projectId);
@@ -541,6 +542,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
             project_id: projectId,
             addons: adicionais as any,
             entregaveis_comerciais: entregaveisComerciais as any,
+            custos_fonte: custosFonte as any,
             updated_at: new Date().toISOString()
           }]);
 
@@ -561,7 +563,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
     } finally {
       setIsSaving(false);
     }
-  }, [projectId, adicionais, entregaveisComerciais]);
+  }, [projectId, adicionais, entregaveisComerciais, custosFonte]);
 
   // Carregar dados salvos ao montar o componente
   useEffect(() => {
@@ -569,7 +571,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
       try {
         const { data, error } = await supabase
           .from('calculator_data')
-          .select('addons, entregaveis_comerciais')
+          .select('addons, entregaveis_comerciais, custos_fonte')
           .eq('project_id', projectId)
           .maybeSingle();
 
@@ -581,6 +583,9 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
           }
           if (data.entregaveis_comerciais) {
             setEntregaveisComerciais(data.entregaveis_comerciais as unknown as EntregavelComercial[]);
+          }
+          if (data.custos_fonte) {
+            setCustosFonte(data.custos_fonte as unknown as CustosFonte);
           }
         }
       } catch (error) {
