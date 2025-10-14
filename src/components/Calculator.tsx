@@ -451,11 +451,58 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
   const totalCustoImplantacao = (Object.keys(custosCalculados.implantacao) as ImplantacaoKey[])
     .reduce((sum, key) => sum + getAdjustedImplantacaoCost(key), 0);
 
+  // Calcular totais dinamicamente baseados nos entregáveis comerciais
+  const totalVendaImplantacao = entregaveisComerciais
+    .filter(e => e.tipo === 'implantacao')
+    .reduce((sum, e) => sum + e.precoVenda * e.quantidade, 0);
+  
+  const totalVendaMensal = entregaveisComerciais
+    .filter(e => e.tipo === 'mensal')
+    .reduce((sum, e) => sum + e.precoVenda * e.quantidade, 0);
+
+  const totalCustoImplantacaoEntregaveis = entregaveisComerciais
+    .filter(e => e.tipo === 'implantacao')
+    .reduce((sum, e) => {
+      const custo = e.custosRelacionados.reduce((cSum, custoId) => {
+        const custoItem = custosFonte.implantacao.find(c => c.id === custoId);
+        if (custoItem) {
+          const multiplicador = e.complexidade === 'baixa' 
+            ? custoItem.multiplicadores.baixa 
+            : e.complexidade === 'alta' 
+            ? custoItem.multiplicadores.alta 
+            : custoItem.multiplicadores.media;
+          const custoAjustado = custoItem.valor * (1 + multiplicador / 100);
+          return cSum + custoAjustado;
+        }
+        return cSum;
+      }, 0) * e.quantidade;
+      return sum + custo;
+    }, 0);
+
+  const totalCustoMensalEntregaveis = entregaveisComerciais
+    .filter(e => e.tipo === 'mensal')
+    .reduce((sum, e) => {
+      const custo = e.custosRelacionados.reduce((cSum, custoId) => {
+        const custoItem = custosFonte.mensaisFixos.find(c => c.id === custoId);
+        if (custoItem) {
+          const multiplicador = e.complexidade === 'baixa' 
+            ? custoItem.multiplicadores.baixa 
+            : e.complexidade === 'alta' 
+            ? custoItem.multiplicadores.alta 
+            : custoItem.multiplicadores.media;
+          const custoAjustado = custoItem.valor * (1 + multiplicador / 100);
+          return cSum + custoAjustado;
+        }
+        return cSum;
+      }, 0) * e.quantidade;
+      return sum + custo;
+    }, 0);
+
   const totals = {
-    implantacao: Object.values(data.implantacao).reduce((sum, val) => sum + val, 0),
-    recorrencia: Object.values(data.recorrencia).reduce((sum, val) => sum + val, 0) + adicionaisTotals.totalVenda,
-    custoImplantacao: totalCustoImplantacao,
-    custoRecorrencia: Object.values(custosCalculados.recorrencia).reduce((sum, val) => sum + val, 0) + adicionaisTotals.totalCusto
+    implantacao: totalVendaImplantacao,
+    recorrencia: totalVendaMensal + adicionaisTotals.totalVenda,
+    custoImplantacao: totalCustoImplantacaoEntregaveis,
+    custoRecorrencia: totalCustoMensalEntregaveis + adicionaisTotals.totalCusto
   };
 
 
@@ -1059,46 +1106,10 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
               {/* Summary */}
               <SummaryCard
                 data={{
-                  totalImplantacao: entregaveisComerciais.filter(e => e.tipo === 'implantacao').reduce((sum, e) => sum + e.precoVenda, 0),
-                  totalRecorrencia: entregaveisComerciais.filter(e => e.tipo === 'mensal').reduce((sum, e) => sum + e.precoVenda, 0) + totals.recorrencia,
-                  margemImplantacao: calculateMargin(
-                    entregaveisComerciais.filter(e => e.tipo === 'implantacao').reduce((sum, e) => sum + e.precoVenda, 0),
-                    entregaveisComerciais.filter(e => e.tipo === 'implantacao').reduce((sum, e) => {
-                      const custo = e.custosRelacionados.reduce((cSum, custoId) => {
-                        const custoItem = custosFonte.implantacao.find(c => c.id === custoId);
-                        if (custoItem) {
-                          const multiplicador = e.complexidade === 'baixa' 
-                            ? custoItem.multiplicadores.baixa 
-                            : e.complexidade === 'alta' 
-                            ? custoItem.multiplicadores.alta 
-                            : custoItem.multiplicadores.media;
-                          const custoAjustado = custoItem.valor * (1 + multiplicador / 100);
-                          return cSum + custoAjustado;
-                        }
-                        return cSum;
-                      }, 0) * e.quantidade;
-                      return sum + custo;
-                    }, 0)
-                  ),
-                  margemRecorrencia: calculateMargin(
-                    entregaveisComerciais.filter(e => e.tipo === 'mensal').reduce((sum, e) => sum + e.precoVenda, 0) + totals.recorrencia,
-                    entregaveisComerciais.filter(e => e.tipo === 'mensal').reduce((sum, e) => {
-                      const custo = e.custosRelacionados.reduce((cSum, custoId) => {
-                        const custoItem = custosFonte.mensaisFixos.find(c => c.id === custoId);
-                        if (custoItem) {
-                          const multiplicador = e.complexidade === 'baixa' 
-                            ? custoItem.multiplicadores.baixa 
-                            : e.complexidade === 'alta' 
-                            ? custoItem.multiplicadores.alta 
-                            : custoItem.multiplicadores.media;
-                          const custoAjustado = custoItem.valor * (1 + multiplicador / 100);
-                          return cSum + custoAjustado;
-                        }
-                        return cSum;
-                      }, 0) * e.quantidade;
-                      return sum + custo;
-                    }, 0) + totals.custoRecorrencia
-                  )
+                  totalImplantacao: totals.implantacao,
+                  totalRecorrencia: totals.recorrencia,
+                  margemImplantacao: calculateMargin(totals.implantacao, totals.custoImplantacao),
+                  margemRecorrencia: calculateMargin(totals.recorrencia, totals.custoRecorrencia)
                 }}
                 formatCurrency={formatCurrency}
               />
