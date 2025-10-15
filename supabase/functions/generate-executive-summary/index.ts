@@ -126,6 +126,14 @@ FORMATAÇÃO VISUAL:
 - Barras de progresso para margens
 - Cores condicionais (verde/amarelo/vermelho) baseadas em performance
 
+⚠️ FORMATAÇÃO DE VALORES MONETÁRIOS (CRÍTICO):
+- TODOS os valores em reais devem seguir o padrão brasileiro: R$ 9.000,00
+- Use ponto (.) como separador de milhares
+- Use vírgula (,) como separador decimal
+- Sempre 2 casas decimais
+- Exemplos: R$ 1.500,00 | R$ 12.800,00 | R$ 3.843,42 | R$ 8.956,58
+- Nunca use formato americano (12800.00)
+
 NÃO INCLUIR:
 ❌ Análise de viabilidade textual
 ❌ Recomendações estratégicas
@@ -145,7 +153,8 @@ INSTRUÇÕES FINAIS:
 - Use cores semafóricas para margens (verde/amarelo/vermelho)
 - Crie visualizações tipo dashboard/BI com foco em DADOS OBJETIVOS
 - NÃO inclua análises textuais, recomendações ou narrativas
-- O HTML deve ser COMPLETO, VÁLIDO e pronto para renderização direta`;
+- O HTML deve ser COMPLETO, VÁLIDO e pronto para renderização direta
+- ⚠️ CRÍTICO: TODOS os valores monetários DEVEM usar formato brasileiro: R$ 9.000,00 (ponto para milhares, vírgula para decimais)`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
