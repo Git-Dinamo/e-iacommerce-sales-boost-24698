@@ -48,10 +48,10 @@ ESTRUTURA DO DASHBOARD (TIPO BI):
 
 2. 📊 PAINEL DE KPIs (Grid 2x2 ou 1x4):
    Cards grandes e visuais com:
-   - 💰 Receita Total Anual (valor + ícone)
-   - 💸 Custo Total Anual (valor + ícone)
+   - 💰 Receita Total do Projeto (valor + ícone) - Projetada para [simulacao.prazoContrato] meses
+   - 💸 Custo Total do Projeto (valor + ícone) - Projetado para [simulacao.prazoContrato] meses
    - 📈 Margem Líquida % (com barra de progresso colorida)
-   - 🎯 Lucro Líquido Anual (destaque positivo/negativo)
+   - 🎯 Lucro Líquido do Projeto (destaque positivo/negativo) - Para [simulacao.prazoContrato] meses
    
    Cores semafóricas:
    - Verde: margem > 30%
