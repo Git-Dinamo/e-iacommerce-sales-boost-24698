@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { InputCell } from './InputCell';
 import { MarginIndicator } from './MarginIndicator';
 import { SummaryCard } from './SummaryCard';
+import { ExecutiveSummaryExporter } from './ExecutiveSummaryExporter';
 import { Save, Maximize2, Loader2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -1888,6 +1889,19 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
           </>
         )}
       </Button>
+
+      {/* Botão de exportar resumo executivo */}
+      <div className="fixed bottom-24 right-8 w-64 z-50">
+        <ExecutiveSummaryExporter
+          projectId={projectId}
+          projectName="Projeto"
+          clientName="Cliente"
+          custosFonte={custosFonte}
+          entregaveisComerciais={entregaveisComerciais}
+          totals={totals}
+          simuladorContrato={simuladorContrato}
+        />
+      </div>
     </div>
   );
 };

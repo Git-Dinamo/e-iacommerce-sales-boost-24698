@@ -1,1 +1,7 @@
 project_id = "kjuouwqsjanwnfhaecoo"
+
+[functions.generate-executive-summary]
+verify_jwt = false
+
+[functions.generate-pdf]
+verify_jwt = false
