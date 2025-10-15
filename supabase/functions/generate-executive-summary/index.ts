@@ -53,10 +53,44 @@ ESTRUTURA DO DASHBOARD (TIPO BI):
    - 📈 Margem Líquida % (com barra de progresso colorida)
    - 🎯 Lucro Líquido do Projeto (destaque positivo/negativo) - Para [simulacao.prazoContrato] meses
    
-   Cores semafóricas:
-   - Verde: margem > 30%
-   - Amarelo: margem 15-30%
-   - Vermelho: margem < 15%
+   ⚠️ CÁLCULOS FINANCEIROS OBRIGATÓRIOS:
+   
+   MARGEM BRUTA:
+   - Margem Bruta (R$) = Receita Total - Custo Total
+   - Margem Bruta (%) = (Margem Bruta / Receita Total) × 100
+   
+   DEDUÇÕES FIXAS:
+   - Tributos = 10% da Receita Total
+   - Margem Administrativa = 20% da Receita Total
+   - Total de Deduções = Tributos + Margem Administrativa (sempre 30% da Receita)
+   
+   MARGEM LÍQUIDA:
+   - Margem Líquida (R$) = Margem Bruta - Tributos - Margem Administrativa
+   - Margem Líquida (%) = (Margem Líquida / Receita Total) × 100
+   - OU: Margem Líquida (%) = Margem Bruta (%) - 30%
+   
+   LUCRO LÍQUIDO:
+   - Lucro Líquido = Margem Líquida (em R$)
+   - É o valor final após todas as deduções
+   
+   EXEMPLO PRÁTICO:
+   Se Receita = R$ 12.800,00 e Custo = R$ 3.843,42
+   - Margem Bruta = 12.800 - 3.843,42 = R$ 8.956,58
+   - Margem Bruta % = (8.956,58 / 12.800) × 100 = 69,97%
+   - Tributos (10%) = 12.800 × 0,10 = R$ 1.280,00
+   - Margem Admin (20%) = 12.800 × 0,20 = R$ 2.560,00
+   - Margem Líquida = 8.956,58 - 1.280 - 2.560 = R$ 5.116,58
+   - Margem Líquida % = 69,97% - 30% = 39,97%
+   - Lucro Líquido = R$ 5.116,58
+   
+   NO PAINEL DE KPIs, EXIBIR:
+   - Card "Margem Líquida %" mostrando o valor LÍQUIDO (após tributos e admin)
+   - Card "Lucro Líquido" mostrando o valor em R$ líquido
+   
+   Cores semafóricas (baseadas na Margem Líquida %):
+   - Verde: margem líquida > 30%
+   - Amarelo: margem líquida 15-30%
+   - Vermelho: margem líquida < 15%
 
 3. 💼 BREAKDOWN IMPLANTAÇÃO:
    Seção com 2 colunas:
@@ -71,9 +105,11 @@ ESTRUTURA DO DASHBOARD (TIPO BI):
    - Colunas: Nome | Qtd | Preço Unit. | Total
    - Footer: TOTAL RECEITA IMPLANTAÇÃO
    
-   Card de Resumo Implantação:
-   - Receita vs Custo (barras lado a lado)
-   - Margem % em destaque
+    Card de Resumo Implantação:
+    - Receita vs Custo (barras lado a lado)
+    - Margem Bruta R$ e %
+    - Margem Líquida R$ e % (após tributos e admin)
+    - Destacar claramente: "Margem Bruta: XX% | Margem Líquida: XX% (após 30% deduções)"
 
 4. 🔄 BREAKDOWN RECORRÊNCIA MENSAL:
    Seção com 2 colunas:
@@ -88,9 +124,11 @@ ESTRUTURA DO DASHBOARD (TIPO BI):
    - Colunas: Nome | Qtd | Preço Unit. | Total/mês
    - Footer: TOTAL RECEITA MENSAL
    
-   Card de Resumo Recorrência:
-   - Receita vs Custo mensal (barras)
-   - Margem % recorrente em destaque
+    Card de Resumo Recorrência:
+    - Receita vs Custo mensal (barras)
+    - Margem Bruta R$ e %
+    - Margem Líquida R$ e % (após tributos e admin)
+    - Destacar claramente: "Margem Bruta: XX% | Margem Líquida: XX% (após 30% deduções)"
 
 5. 📈 PROJEÇÃO DE FLUXO DE CAIXA:
    Tabela mês a mês (do mês 0 até o prazo do contrato informado em simulacao.prazoContrato):
@@ -110,12 +148,23 @@ ESTRUTURA DO DASHBOARD (TIPO BI):
    - Mês do Breakeven (quando acumulado fica positivo)
    - Linha total ao final
 
-6. 🎯 INDICADORES CHAVE:
+6. 💡 QUADRO DE CÁLCULOS FINANCEIROS:
+   Box informativo mostrando a composição da margem:
+   - Receita Total: R$ XXX
+   - (-) Custo Total: R$ XXX
+   - (=) Margem Bruta: R$ XXX (XX%)
+   - (-) Tributos (10%): R$ XXX
+   - (-) Margem Administrativa (20%): R$ XXX
+   - (=) Lucro Líquido: R$ XXX (Margem Líquida XX%)
+   
+7. 🎯 INDICADORES CHAVE:
    Grid de mini-cards:
    - 🏁 Breakeven Point: "Mês X" ou "Não atingido"
-   - 💹 ROI Total: "X%" (calculado: lucro total / custo total * 100)
-   - 📊 Margem Implantação: "X%"
-   - 🔄 Margem Recorrência: "X%"
+   - 💹 ROI Total: "X%" (calculado: lucro líquido total / custo total * 100)
+   - 📊 Margem Bruta Implantação: "X%"
+   - 📊 Margem Líquida Implantação: "X%" (margem bruta - 30%)
+   - 🔄 Margem Bruta Recorrência: "X%"
+   - 🔄 Margem Líquida Recorrência: "X%" (margem bruta - 30%)
 
 FORMATAÇÃO VISUAL:
 - Tabelas: bordas finas, linhas alternadas (bg-gray-50), headers coloridos
@@ -154,7 +203,14 @@ INSTRUÇÕES FINAIS:
 - Crie visualizações tipo dashboard/BI com foco em DADOS OBJETIVOS
 - NÃO inclua análises textuais, recomendações ou narrativas
 - O HTML deve ser COMPLETO, VÁLIDO e pronto para renderização direta
-- ⚠️ CRÍTICO: TODOS os valores monetários DEVEM usar formato brasileiro: R$ 9.000,00 (ponto para milhares, vírgula para decimais)`;
+- ⚠️ CRÍTICO: TODOS os valores monetários DEVEM usar formato brasileiro: R$ 9.000,00 (ponto para milhares, vírgula para decimais)
+- ⚠️ CRÍTICO: DIFERENCIE SEMPRE MARGEM BRUTA DE MARGEM LÍQUIDA:
+  * Margem Bruta = Receita - Custo (antes de tributos e admin)
+  * Margem Líquida = Margem Bruta - 10% Tributos - 20% Admin (sempre 30% a menos que bruta)
+  * Nos KPIs principais, exiba MARGEM LÍQUIDA %
+  * Nos resumos de implantação/recorrência, mostre AMBAS (bruta e líquida)
+  * Deixe claro em cada seção qual tipo de margem está sendo exibida
+- Inclua um quadro explicativo mostrando a composição: Receita - Custo = Margem Bruta, depois - Tributos - Admin = Lucro Líquido`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
