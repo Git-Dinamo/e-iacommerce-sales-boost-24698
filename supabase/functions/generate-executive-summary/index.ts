@@ -20,81 +20,132 @@ serve(async (req) => {
 
     console.log("Generating executive summary for project:", projectData.projeto.nome);
 
-    const systemPrompt = `Você é um consultor financeiro sênior especializado em projetos de tecnologia e análise de viabilidade comercial.
+    const systemPrompt = `Você é um especialista em Business Intelligence e visualização de dados financeiros.
 
-Gere um RESUMO EXECUTIVO PROFISSIONAL em HTML completo usando Tailwind CSS via CDN.
+Gere um DASHBOARD EXECUTIVO PROFISSIONAL em HTML completo usando Tailwind CSS via CDN.
+
+⚠️ CRÍTICO - REGRAS OBRIGATÓRIAS:
+1. NUNCA use template literals (\`\${variavel}\`) no HTML - sempre calcule ANTES e insira o VALOR FINAL
+2. NUNCA deixe código JavaScript visível no HTML renderizado
+3. Todos os cálculos devem ser feitos INLINE usando apenas os valores numéricos fornecidos
+4. Use APENAS operações matemáticas diretas com os números dos dados fornecidos
 
 REQUISITOS DO HTML:
-- Documento HTML completo e válido (incluindo <!DOCTYPE html>, <html>, <head>, <body>)
-- Tailwind CSS carregado via CDN no <head>
-- Design moderno, profissional e "print-friendly"
-- Utilize cores HSL do sistema de design (roxo: hsl(256, 70%, 66%), azul: hsl(204, 70%, 53%), verde: hsl(162, 73%, 46%))
-- Responsivo e otimizado para A4 ao imprimir
-- Estilo @media print para ocultar elementos desnecessários na impressão
+- Documento HTML completo e válido (<!DOCTYPE html>, <html>, <head>, <body>)
+- Tailwind CSS via CDN: https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css
+- Design tipo BI/Dashboard com FOCO EM VISUALIZAÇÃO DE DADOS
+- Cores HSL: roxo hsl(256, 70%, 66%), azul hsl(204, 70%, 53%), verde hsl(162, 73%, 46%)
+- Responsivo e otimizado para impressão A4
+- @media print para layout limpo
 
-ESTRUTURA OBRIGATÓRIA:
-1. CABEÇALHO (header com gradiente):
-   - Logo/título "Resumo Executivo"
-   - Nome do projeto em destaque
-   - Nome do cliente
+ESTRUTURA DO DASHBOARD (TIPO BI):
+
+1. 🎯 HEADER EXECUTIVO:
+   - Título "Dashboard Executivo Financeiro"
+   - Nome do projeto + cliente
    - Data de geração
+   - Badge com prazo do contrato (ex: "Análise 12 meses")
 
-2. MÉTRICAS PRINCIPAIS (grid de cards):
-   - Receita Total Anual
-   - Custo Total Anual
-   - Margem Líquida Anual (%)
-   - ROI Projetado
-   Use cores semafóricas baseadas nas margens (verde > 30%, amarelo 15-30%, vermelho < 15%)
+2. 📊 PAINEL DE KPIs (Grid 2x2 ou 1x4):
+   Cards grandes e visuais com:
+   - 💰 Receita Total Anual (valor + ícone)
+   - 💸 Custo Total Anual (valor + ícone)
+   - 📈 Margem Líquida % (com barra de progresso colorida)
+   - 🎯 Lucro Líquido Anual (destaque positivo/negativo)
+   
+   Cores semafóricas:
+   - Verde: margem > 30%
+   - Amarelo: margem 15-30%
+   - Vermelho: margem < 15%
 
-3. ANÁLISE DE IMPLANTAÇÃO:
-   - Tabela de custos fonte (implantação)
-   - Tabela de entregáveis comerciais (implantação)
-   - Total implantação x custo implantação
-   - Margem de implantação
+3. 💼 BREAKDOWN IMPLANTAÇÃO:
+   Seção com 2 colunas:
+   
+   COLUNA 1 - Custos Fonte (Implantação):
+   - Tabela estilizada listando cada custo
+   - Colunas: Nome | Descrição | Valor
+   - Footer: TOTAL CUSTOS IMPLANTAÇÃO
+   
+   COLUNA 2 - Entregáveis Comerciais (Implantação):
+   - Tabela listando cada entregável
+   - Colunas: Nome | Qtd | Preço Unit. | Total
+   - Footer: TOTAL RECEITA IMPLANTAÇÃO
+   
+   Card de Resumo Implantação:
+   - Receita vs Custo (barras lado a lado)
+   - Margem % em destaque
 
-4. ANÁLISE RECORRENTE:
-   - Tabela de custos mensais fixos
-   - Tabela de entregáveis mensais
-   - Receita mensal x custo mensal
-   - Margem de recorrência
+4. 🔄 BREAKDOWN RECORRÊNCIA MENSAL:
+   Seção com 2 colunas:
+   
+   COLUNA 1 - Custos Mensais Fixos:
+   - Tabela estilizada
+   - Colunas: Nome | Descrição | Valor/mês
+   - Footer: TOTAL CUSTOS MENSAIS
+   
+   COLUNA 2 - Entregáveis Mensais:
+   - Tabela listando entregáveis recorrentes
+   - Colunas: Nome | Qtd | Preço Unit. | Total/mês
+   - Footer: TOTAL RECEITA MENSAL
+   
+   Card de Resumo Recorrência:
+   - Receita vs Custo mensal (barras)
+   - Margem % recorrente em destaque
 
-5. PROJEÇÃO ANUAL:
-   - Fluxo de caixa projetado para o prazo do contrato
-   - Breakeven point
-   - ROI acumulado
+5. 📈 PROJEÇÃO DE FLUXO DE CAIXA:
+   Tabela mês a mês (do mês 0 ao prazo contratado):
+   
+   Colunas:
+   | Mês | Receita (R$) | Custo (R$) | Lucro Mensal (R$) | Lucro Acumulado (R$) |
+   
+   CÁLCULOS:
+   - Mês 0: Implantação (receita implantação - custo implantação)
+   - Mês 1-N: Recorrência (receita mensal - custo mensal)
+   - Lucro Acumulado: soma cumulativa
+   
+   ⚠️ IMPORTANTE: Calcule cada linha da tabela usando os valores numéricos fornecidos
+   Exemplo: Se receitaMensal = 5000 e custoMensal = 2000, então lucroMensal = 3000
+   
+   Destacar:
+   - Mês do Breakeven (quando acumulado fica positivo)
+   - Linha total ao final
 
-6. ANÁLISE DE VIABILIDADE:
-   - Pontos fortes do projeto
-   - Riscos identificados
-   - Recomendações estratégicas
-   - Conclusão sobre viabilidade comercial
+6. 🎯 INDICADORES CHAVE:
+   Grid de mini-cards:
+   - 🏁 Breakeven Point: "Mês X" ou "Não atingido"
+   - 💹 ROI Total: "X%" (calculado: lucro total / custo total * 100)
+   - 📊 Margem Implantação: "X%"
+   - 🔄 Margem Recorrência: "X%"
 
-FORMATAÇÃO:
-- Use tabelas estilizadas com bordas e alternância de cores nas linhas
-- Cards com sombras e bordas arredondadas
-- Gradientes em cabeçalhos e seções importantes
-- Ícones usando emojis (📊, 💰, 📈, ⚠️, ✅)
-- Valores monetários formatados (R$ X.XXX,XX)
-- Percentuais com 1 casa decimal
+FORMATAÇÃO VISUAL:
+- Tabelas: bordas finas, linhas alternadas (bg-gray-50), headers coloridos
+- Cards: shadow-lg, rounded-lg, padding generoso
+- Gradientes em headers principais
+- Números: font-bold, tamanho grande para KPIs
+- Use emojis para ícones visuais
+- Barras de progresso para margens
+- Cores condicionais (verde/amarelo/vermelho) baseadas em performance
 
-TOME CUIDADO:
-- Todas as cores devem ser HSL
-- Tabelas devem ter largura 100% e ser responsivas
-- Print: remover botões e elementos interativos
-- Manter hierarquia visual clara
-- Use font-sans do Tailwind (Inter/system fonts)`;
+NÃO INCLUIR:
+❌ Análise de viabilidade textual
+❌ Recomendações estratégicas
+❌ Pontos fortes/fracos narrativos
+❌ Conclusões escritas
 
-    const userPrompt = `Gere o resumo executivo completo em HTML para os seguintes dados do projeto:
+FOCO: Dados puros, visualizações claras, métricas objetivas - um verdadeiro dashboard BI.`;
+
+    const userPrompt = `Gere o dashboard BI completo em HTML para os seguintes dados do projeto:
 
 ${JSON.stringify(projectData, null, 2)}
 
-IMPORTANTE:
-- Analise profundamente os números
-- Identifique margens positivas e negativas
-- Destaque riscos de margem < 15%
-- Calcule ROI e breakeven
-- Dê recomendações concretas e acionáveis
-- O HTML deve ser COMPLETO e pronto para renderização`;
+INSTRUÇÕES FINAIS:
+- Calcule TODOS os valores antes de inserir no HTML (nunca use template literals como \${variavel})
+- Gere tabela de fluxo de caixa mês a mês com valores calculados
+- Identifique o mês de breakeven (quando lucro acumulado fica positivo)
+- Use cores semafóricas para margens (verde/amarelo/vermelho)
+- Crie visualizações tipo dashboard/BI com foco em DADOS OBJETIVOS
+- NÃO inclua análises textuais, recomendações ou narrativas
+- O HTML deve ser COMPLETO, VÁLIDO e pronto para renderização direta`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
