@@ -13,6 +13,7 @@ interface ExecutiveSummaryExporterProps {
   entregaveisComerciais: any[];
   totals: any;
   simuladorContrato: any;
+  prazoContrato: number;
 }
 
 export const ExecutiveSummaryExporter = ({
@@ -22,7 +23,8 @@ export const ExecutiveSummaryExporter = ({
   custosFonte,
   entregaveisComerciais,
   totals,
-  simuladorContrato
+  simuladorContrato,
+  prazoContrato
 }: ExecutiveSummaryExporterProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [htmlContent, setHtmlContent] = useState<string | null>(null);
@@ -84,7 +86,7 @@ export const ExecutiveSummaryExporter = ({
         ? ((receitaMensal - custoMensal) / receitaMensal) * 100 
         : 0;
 
-      const prazoMeses = simuladorContrato?.prazoContrato || 12;
+      const prazoMeses = prazoContrato || 12;
       const receitaTotalAnual = receitaImplantacao + (receitaMensal * prazoMeses);
       const custoTotalAnual = custoImplantacao + (custoMensal * prazoMeses);
       const margemLiquidaAnual = receitaTotalAnual > 0

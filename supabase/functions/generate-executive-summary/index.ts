@@ -93,14 +93,14 @@ ESTRUTURA DO DASHBOARD (TIPO BI):
    - Margem % recorrente em destaque
 
 5. 📈 PROJEÇÃO DE FLUXO DE CAIXA:
-   Tabela mês a mês (do mês 0 ao prazo contratado):
+   Tabela mês a mês (do mês 0 até o prazo do contrato informado em simulacao.prazoContrato):
    
    Colunas:
    | Mês | Receita (R$) | Custo (R$) | Lucro Mensal (R$) | Lucro Acumulado (R$) |
    
    CÁLCULOS:
    - Mês 0: Implantação (receita implantação - custo implantação)
-   - Mês 1-N: Recorrência (receita mensal - custo mensal)
+   - Mês 1 até simulacao.prazoContrato: Recorrência (receita mensal - custo mensal)
    - Lucro Acumulado: soma cumulativa
    
    ⚠️ IMPORTANTE: Calcule cada linha da tabela usando os valores numéricos fornecidos

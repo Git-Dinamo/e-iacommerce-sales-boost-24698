@@ -126,6 +126,8 @@ interface CalculatorProps {
 
 export const Calculator = ({ projectId }: CalculatorProps) => {
   const [activeTab, setActiveTab] = useState('comercial');
+  const [prazoImplantacao, setPrazoImplantacao] = useState(3); // Tempo de implantação em meses
+  const [prazoRecorrencia, setPrazoRecorrencia] = useState(12); // Tempo de contrato recorrente em meses
   const [data, setData] = useState<CalculatorData>({
     implantacao: {
       agente: 3800,
@@ -530,6 +532,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
             addons: adicionais as any,
             entregaveis_comerciais: entregaveisComerciais as any,
             custos_fonte: custosFonte as any,
+            duracao_meses: prazoRecorrencia,
             updated_at: new Date().toISOString()
           })
           .eq('project_id', projectId);
@@ -544,6 +547,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
             addons: adicionais as any,
             entregaveis_comerciais: entregaveisComerciais as any,
             custos_fonte: custosFonte as any,
+            duracao_meses: prazoRecorrencia,
             updated_at: new Date().toISOString()
           }]);
 
@@ -564,7 +568,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
     } finally {
       setIsSaving(false);
     }
-  }, [projectId, adicionais, entregaveisComerciais, custosFonte]);
+  }, [projectId, adicionais, entregaveisComerciais, custosFonte, prazoRecorrencia]);
 
   // Carregar dados salvos ao montar o componente
   useEffect(() => {
@@ -572,7 +576,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
       try {
         const { data, error } = await supabase
           .from('calculator_data')
-          .select('addons, entregaveis_comerciais, custos_fonte')
+          .select('addons, entregaveis_comerciais, custos_fonte, duracao_meses')
           .eq('project_id', projectId)
           .maybeSingle();
 
@@ -587,6 +591,9 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
           }
           if (data.custos_fonte) {
             setCustosFonte(data.custos_fonte as unknown as CustosFonte);
+          }
+          if (data.duracao_meses) {
+            setPrazoRecorrencia(data.duracao_meses);
           }
         }
       } catch (error) {
@@ -615,6 +622,43 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
           <p className="text-xl opacity-90">
             Calculadora de projetos personalizados premium da Clinicia.
           </p>
+        </div>
+
+        {/* Configuração de Prazos */}
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 border-b-2 border-gray-200">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">⏱️ Configuração de Prazos do Projeto</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white p-5 rounded-xl shadow-md border-2 border-blue-200">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  🚀 Prazo de Implantação (meses)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="24"
+                  value={prazoImplantacao}
+                  onChange={(e) => setPrazoImplantacao(Number(e.target.value))}
+                  className="w-full px-4 py-3 text-lg font-bold border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                />
+                <p className="text-xs text-gray-600 mt-2">Tempo estimado para completar a implantação</p>
+              </div>
+              <div className="bg-white p-5 rounded-xl shadow-md border-2 border-purple-200">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  🔄 Prazo de Contrato Recorrente (meses)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={prazoRecorrencia}
+                  onChange={(e) => setPrazoRecorrencia(Number(e.target.value))}
+                  className="w-full px-4 py-3 text-lg font-bold border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-500"
+                />
+                <p className="text-xs text-gray-600 mt-2">Duração total do contrato recorrente</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -1770,9 +1814,9 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
             <h3 className="text-xl font-bold p-4 bg-gray-100 border-b">📊 Resumo Financeiro Total do Projeto</h3>
             <div className="p-6">
               {(() => {
-                // Cálculos totais do projeto
-                const vendaTotalProjeto = totals.implantacao + (totals.recorrencia * data.simulacao.prazoContrato) + adicionaisTotals.totalVenda;
-                const custoTotalProjeto = totals.custoImplantacao + (totals.custoRecorrencia * data.simulacao.prazoContrato) + adicionaisTotals.totalCusto;
+                // Cálculos totais do projeto usando prazoRecorrencia
+                const vendaTotalProjeto = totals.implantacao + (totals.recorrencia * prazoRecorrencia) + adicionaisTotals.totalVenda;
+                const custoTotalProjeto = totals.custoImplantacao + (totals.custoRecorrencia * prazoRecorrencia) + adicionaisTotals.totalCusto;
                 const lucroBrutoProjeto = vendaTotalProjeto - custoTotalProjeto;
                 
                 // Margens e custos administrativos
@@ -1852,8 +1896,8 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
                           <div className="text-lg font-bold text-blue-600">{formatCurrency(totals.implantacao)}</div>
                         </div>
                         <div className="bg-purple-50 p-4 rounded-lg text-center">
-                          <div className="font-semibold text-purple-700">Recorrência ({data.simulacao.prazoContrato}m)</div>
-                          <div className="text-lg font-bold text-purple-600">{formatCurrency(totals.recorrencia * data.simulacao.prazoContrato)}</div>
+                          <div className="font-semibold text-purple-700">Recorrência ({prazoRecorrencia}m)</div>
+                          <div className="text-lg font-bold text-purple-600">{formatCurrency(totals.recorrencia * prazoRecorrencia)}</div>
                         </div>
                         <div className="bg-green-50 p-4 rounded-lg text-center">
                           <div className="font-semibold text-green-700">Adicionais</div>
@@ -1900,6 +1944,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
           entregaveisComerciais={entregaveisComerciais}
           totals={totals}
           simuladorContrato={simuladorContrato}
+          prazoContrato={prazoRecorrencia}
         />
       </div>
     </div>
