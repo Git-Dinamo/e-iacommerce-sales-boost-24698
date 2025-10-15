@@ -215,6 +215,7 @@ export type Database = {
           num_profissionais: number | null
           percentual_primeira_vez: number | null
           percentual_retorno: number | null
+          prazo_implantacao: number | null
           preco_consulta_primeira_vez: number | null
           preco_consulta_retorno: number | null
           preco_consulta_simples: number | null
@@ -245,6 +246,7 @@ export type Database = {
           num_profissionais?: number | null
           percentual_primeira_vez?: number | null
           percentual_retorno?: number | null
+          prazo_implantacao?: number | null
           preco_consulta_primeira_vez?: number | null
           preco_consulta_retorno?: number | null
           preco_consulta_simples?: number | null
@@ -275,6 +277,7 @@ export type Database = {
           num_profissionais?: number | null
           percentual_primeira_vez?: number | null
           percentual_retorno?: number | null
+          prazo_implantacao?: number | null
           preco_consulta_primeira_vez?: number | null
           preco_consulta_retorno?: number | null
           preco_consulta_simples?: number | null

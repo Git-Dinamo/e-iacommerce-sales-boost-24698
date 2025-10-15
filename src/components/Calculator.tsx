@@ -533,6 +533,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
             entregaveis_comerciais: entregaveisComerciais as any,
             custos_fonte: custosFonte as any,
             duracao_meses: prazoRecorrencia,
+            prazo_implantacao: prazoImplantacao,
             updated_at: new Date().toISOString()
           })
           .eq('project_id', projectId);
@@ -548,6 +549,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
             entregaveis_comerciais: entregaveisComerciais as any,
             custos_fonte: custosFonte as any,
             duracao_meses: prazoRecorrencia,
+            prazo_implantacao: prazoImplantacao,
             updated_at: new Date().toISOString()
           }]);
 
@@ -568,7 +570,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
     } finally {
       setIsSaving(false);
     }
-  }, [projectId, adicionais, entregaveisComerciais, custosFonte, prazoRecorrencia]);
+  }, [projectId, adicionais, entregaveisComerciais, custosFonte, prazoRecorrencia, prazoImplantacao]);
 
   // Carregar dados salvos ao montar o componente
   useEffect(() => {
@@ -576,7 +578,7 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
       try {
         const { data, error } = await supabase
           .from('calculator_data')
-          .select('addons, entregaveis_comerciais, custos_fonte, duracao_meses')
+          .select('addons, entregaveis_comerciais, custos_fonte, duracao_meses, prazo_implantacao')
           .eq('project_id', projectId)
           .maybeSingle();
 
@@ -594,6 +596,9 @@ export const Calculator = ({ projectId }: CalculatorProps) => {
           }
           if (data.duracao_meses) {
             setPrazoRecorrencia(data.duracao_meses);
+          }
+          if (data.prazo_implantacao) {
+            setPrazoImplantacao(data.prazo_implantacao);
           }
         }
       } catch (error) {
